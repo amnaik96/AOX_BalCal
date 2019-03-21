@@ -40,7 +40,7 @@ balCal_FLAG = out.grbf;
 numBasis = out.basis;
 %
 %TO SELECT INDIRECT APPROACH                         set approach_FLAG = 1;
-approach_FLAG = 0;%out.approach;
+approach_FLAG = out.approach;
 %
 %SELECT ALGEBRAIC MODEL
 %          set model_FLAG = 1 (full), 2 (trunc), 3 (linear), or 4 (custom);
@@ -175,6 +175,7 @@ for lhs = 1:numLHS
     
     % Uses the sampling indices in "sample" to create the subsamples
     series = series0(sample);
+    excessVec = excessVec0(sample,:);
     targetMatrix = targetMatrix0(sample,:);
     comIN = comIN0(sample,:);
     
@@ -191,10 +192,12 @@ for lhs = 1:numLHS
     if approach_FLAG == 1
         
         % Flip Them Around for the Indirect Approach
-        % Subtract the Global Zeros from the Inputs and Local Zeros 
+        % Subtract the Global Zeros from the Inputs and Local Zeros
+        numpts = length(series);
+        [~,localZerosAllPoints] = localzeros(series,excessVec);
         itargetMatrix = excessVec - localZerosAllPoints;
-        idainputs = targetMatrix0;
-        idalz = localZerosAllPoints - localZerosAllPoints;
+        idainputs = targetMatrix;
+        idalz = zeros(size(itargetMatrix));
         
         % Build the Algebraic Model
         
