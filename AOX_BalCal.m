@@ -182,6 +182,8 @@ for lhs = 1:numLHS
     % Characterizes the series in the subsamples
     [~,s_1st,~] = unique(series);
     nseries = length(s_1st);
+
+    
     
     fprintf('\nWorking ...\n')
     %% DIRTY
@@ -873,6 +875,7 @@ xapprox = coeff;
 if FLAGS.excel == 1
     filename = 'APPROX_AOX_COEFF_MATRIX.csv';
     csvwrite(filename,xapprox)
+    dlmwrite('APPROX_AOX_COEFF_MATRIX.txt',xapprox,'precision','%.16f');
 end
 
 % APPROXIMATION
@@ -1014,7 +1017,7 @@ if FLAGS.balOut == 1
             checkit(m,:) = aprxINminGZ(m,:)-targetMatrix0(m,:);
         end
         
-        taresAllPoints = meantare(series0,checkit);
+        [taresAllPoints,tarestdev] = meantare(series0,checkit);
         %RESIDUAL
         targetRes = targetMatrix0+taresAllPoints-aprxINminGZ;      %0=b-Ax
     end
@@ -1198,9 +1201,10 @@ if FLAGS.balCal == 2
         aprxINminGZ_Hist{u} = aprxINminGZ2;
         
         % SOLVE FOR TARES BY TAKING THE MEAN
-        taresAllPointsGRBF = meantare(series0,aprxINminGZ2-targetMatrix0);
+        [taresAllPointsGRBF,taretalGRBFSTDDEV] = meantare(series0,aprxINminGZ2-targetMatrix0);
         
         taresGRBF = taresAllPointsGRBF(s_1st,:);
+        taresGRBFSTDEV = taretalGRBFSTDEV(s_1st,:);
         
         tareGRBFHist{u} = taresGRBF;
         
@@ -1376,16 +1380,18 @@ if FLAGS.balVal == 1
     % Call the Algebraic Subroutine
     comGZvalid = zeros(nterms+1,1);
     [comINvalid,comLZvalid,comGZvalid]=balCal_algEquations3(FLAGS.model,nterms,dimFlag,numptsvalid,seriesvalid,nseriesvalid,dainputsvalid,dalzvalid,dagzvalid);
-    
+        
     comINminLZvalid = comINvalid-comLZvalid;
     
     %VALIDATION APPROXIMATION
     %define the approximation for inputs minus global zeros
     %    interceptsvalid = -(comGZvalid'*xvalid);  % ajm 5/17/18
-    aprxINvalid = (xvalid'*comINvalid)';        %to find approximation AJM111516
-    aprxLZvalid = (xvalid'*comLZvalid)';       %to find tares AAM042016
+    
+    aprxINvalid = comINvalid'*xvalid;        %to find approximation AJM111516
+    aprxLZvalid = comLZvalid'*xvalid;       %to find tares AAM042016
     
     aprxINminLZvalid = comINminLZvalid'*xvalid;
+
     
     for m=1:length(aprxINvalid(:,1))
         %%%%% 3/23/17 Zap intercepts %%%
@@ -1397,8 +1403,10 @@ if FLAGS.balVal == 1
     end
     
     % SOLVE FOR TARES BY TAKING THE MEAN
-    taresAllPointsvalid = meantare(seriesvalid,checkitvalid);
+    [taresAllPointsvalid,taretalstdvalid] = meantare(seriesvalid,checkitvalid);
     zapvalid     = taresAllPointsvalid(s_1st,:);
+    zapSTDEVvalid = taretalstdvalid(s_1st,:);
+    
     %RESIDUAL
     targetResvalid = targetMatrixvalid-aprxINminGZvalid+taresAllPointsvalid;
     
@@ -1578,9 +1586,10 @@ if FLAGS.balVal == 1
             
             % SOLVE FOR TARES BY TAKING THE MEAN
             [~,s_1st,~] = unique(seriesvalid);
-            taresAllPointsvalid2 = meantare(seriesvalid,aprxINminGZ2valid-targetMatrixvalid)
+            [taresAllPointsvalid2,taretalstdvalid2] = meantare(seriesvalid,aprxINminGZ2valid-targetMatrixvalid)
             
             taresGRBFvalid = taresAllPointsvalid2(s_1st,:);
+            taresGRBFSTDEVvalid = taretalstdvalid2(s_1st,:);
             tareHistvalid{u} = taresGRBFvalid;
             
             targetRes2valid = targetMatrixvalid+taresAllPointsvalid2-aprxINminGZ2valid;      %0=b-Ax
@@ -1698,37 +1707,26 @@ if FLAGS.balVal == 1
 end
 
 if FLAGS.balApprox == 1
-    %
-    %
-    %
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %                        APPROXIMATION SECTION      AJM 6/29/17           %
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %
     %DEFINE THE PRODUCTION CSV INPUT FILE AND SELECT THE RANGE OF DATA VALUES TO READ
-    %
     
-    load(out.savePathapp,'-mat');
-    %
+    load(out.savePathapp,'-mat');  
     
     % num of data points
     numptsapprox = length(excessVecapprox);
-    %
-    
     
     %natural zeros (also called global zeros)
     globalZerosapprox = mean(natzerosapprox);
     
-    %%% make an array out of the globalZerosapprox vector
+    % make an array out of the globalZerosapprox vector
     for i=1:numptsapprox
         globalZerosAllPointsapprox(i,:) = globalZerosapprox;
     end
-    %%%
     
-    
-    
-    %% Subtract the Global Zeros from the Inputs %%%%%%%%%%
-    
+    % Subtract the Global Zeros from the Inputs 
     for k=1:dimFlag
         
         dainputsapprox(:,k) = excessVecapprox(:,k)-globalZerosAllPointsapprox(:,k);
@@ -1736,39 +1734,25 @@ if FLAGS.balApprox == 1
         dalzapprox(:,k) = globalZerosAllPointsapprox(:,k)-globalZerosAllPointsapprox(:,k);
         
     end
-    %%%%%%%%%%%%
     
-    
-    %%
     %% Build the Algebraic Model
-    %%
     
-    %     n(1) = 2*dimFlag*(dimFlag+2);
-    %     n(2) = dimFlag*(dimFlag+3)/2;
-    %     n(3) = dimFlag;
-    %     FLAGS.model = find(n==size( xapproxer,1)-1);
-    
-    
-    %% Full Algebraic Model
+    % Full Algebraic Model
     if FLAGS.model == 1
         nterms = 2*dimFlag*(dimFlag+2);
     end
     
-    %% Truncated Algebraic Model
+    % Truncated Algebraic Model
     if FLAGS.model == 2
         nterms = dimFlag*(dimFlag+3)/2;
     end
     
-    %% Linear Algebraic Model
+    % Linear Algebraic Model
     if FLAGS.model == 3
         nterms = dimFlag;
     end
     
-    
-    
     % Call the Algebraic Subroutine
-    %
-    
     comGZapprox= zeros(nterms,1);
     
     
@@ -1778,29 +1762,15 @@ if FLAGS.balApprox == 1
     
     [comINapprox,comLZapprox,comGZapprox]=balCal_algEquations3(FLAGS.model,nterms,dimFlag,numptsapprox,0,0,dainputsapprox,dalzapprox,biggee);
     
-    %FLAGS.model
-    %nterms
-    %dimFlag
-    %numptsapprox
-    
-    
-    %%
-    %%
-    
-    
     %LOAD APPROXIMATION
     %define the approximation for inputs minus global zeros
     interceptsapprox = -(comGZapprox'*xapprox);
     aprxINapprox = ( xapprox'*comINapprox)';        %to find ?? AJM111516
-    %%
-    %%
+    
     for m=1:length(aprxINapprox)
         aprxINminGZapprox(m,:) = aprxINapprox(m,:);
     end
-    %%
-    %%
     
-    %%%%%%
     if FLAGS.excel == 1
         fprintf(' ');
         fprintf('%%%%%%%%%%%%%%%%%');
@@ -1817,36 +1787,19 @@ if FLAGS.balApprox == 1
         fprintf(' ');
         fprintf('ALG MODEL APPROXIMATION RESULTS: Check aprxINminGZapprox in Workspace');
     end
-    %%%%%%
     
-    
-    
-    
-    %
-    
-    
-    %
-    %
-    %
-    %
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %                    RBF SECTION FOR APPROXIMATION     AJM 6/29/17                         %
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %goal to use centers, width and coefficients to approxate parameters against
     %independent data
     
-    %%
-    
     aprxINminGZ2approx = aprxINminGZapprox;
-    
-    
-    %%
     
     if FLAGS.balCal == 2
         
         etaHistapprox = cell(numBasis,1);
         aprxINminGZ_Histapprox = cell(numBasis,1);
-        
         
         etaGZapprox = dot(globalZerosAllPointsapprox-excessVecapprox,globalZerosAllPointsapprox-excessVecapprox);
         
@@ -1861,7 +1814,6 @@ if FLAGS.balApprox == 1
                 
                 w(s) = wHist(u,s); % Have to use the history or it gets overwritten
                 
-                
                 rbfINminGZapprox(:,s)=exp(etaapprox(:,s)*log(abs(w(s))));
                 coeffapprox(s) = cHist(u,s); %Have to use the history or it gets overwritten
                 
@@ -1870,23 +1822,17 @@ if FLAGS.balApprox == 1
                 
             end
             
-            
-            
             wHistapprox(u,:) = w;
             cHistapprox(u,:) = coeffapprox;
             centerIndexHist(u,:) = centerIndexLoop;
             etaHistapprox{u} = etaapprox;
             
             %UPDATE THE RESIDUAL
-            
             %update the approximation
-            
             aprxINminGZ2approx = aprxINminGZ2approx+rbfc_INminGZapprox;
             aprxINminGZ_Histapprox{u} = aprxINminGZ2approx;
             
         end
-        
-        
         
         if FLAGS.excel == 1
             fprintf(' ');
@@ -1909,8 +1855,3 @@ end
 
 fprintf('  ')
 fprintf('Calculations Complete.')
-
-%
-%
-
-%toc
