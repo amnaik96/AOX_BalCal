@@ -1484,6 +1484,9 @@ function savePath = loadCSV(cva,output_location,mode)
 % reading.
 % Input: type - String that changes depending on whether loading
 % calibration, validation, or approximation data.
+
+unicode2ascii(convertCharsToStrings(cva.Path))
+
 switch cva.type
     case 'calibrate'
         cal = cva;

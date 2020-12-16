@@ -213,6 +213,13 @@ if FLAGS.mode==1 && (exist('loadCapacities','var')==0 || any(loadCapacities==0))
 end
 
 series0 = series;
+
+series0_adjusted =series0;
+seriesVal = unique(series);
+for i = 1:length(seriesVal)
+    series0_adjusted(series0_adjusted == seriesVal(i)) = i;
+end
+
 series20=series2;
 pointID0=pointID;
 [~,s_1st0,~] = unique(series0);
@@ -551,7 +558,7 @@ else
     tares=zeros(nseries0,loaddimFlag); %Else set to zero (no series intercepts)
 end
 intercepts=-tares;
-taretal=tares(series0,:);
+taretal=tares(series0_adjusted,:);
 aprxINminGZ=aprxIN+taretal; %Approximation that does not include intercept terms
 
 %    QUESTION: JRP; IS THIS NECESSARY/USEFUL?
@@ -571,7 +578,7 @@ if out.model~=0 %If any algebraic terms included
                 y_hat_PI(:,i)=ANOVA(i).y_hat_PI;
             end
         end
-        tareCheck(targetMatrix0,aprxINminGZ,series0,tares,FLAGS,targetRes,y_hat_PI,pointID0);
+        tareCheck(targetMatrix0,aprxINminGZ,series0,series0_adjusted,tares,FLAGS,targetRes,y_hat_PI,pointID0);
     end
     
     %Perform Shapiro-Wilk Test on residuals
@@ -627,6 +634,13 @@ if FLAGS.balVal == 1
         series2valid=ones(size(excessVecvalid,1),1);
     end
     [validSeries,s_1stV,~] = unique(seriesvalid); %Define series for validation data
+    
+    seriesvalid_adjusted =seriesvalid;
+    seriesVal = unique(seriesvalid);
+    for i = 1:length(seriesVal)
+        seriesvalid_adjusted(seriesvalid_adjusted == seriesVal(i)) = i;
+    end
+    
     
     % Dimensions of data
     [numptsvalid,voltdimFlagvalid] = size(excessVecvalid); %Number of datapoints and voltage channels
@@ -705,7 +719,7 @@ if FLAGS.balVal == 1
         end
         
         if FLAGS.tare_intercept==1
-            tareCheck(targetMatrixvalid,aprxINminGZvalid,seriesvalid,taresvalid,FLAGS,targetResvalid,loadPI_valid,pointIDvalid);
+            tareCheck(targetMatrixvalid,aprxINminGZvalid,seriesvalid,seriesvalid_adjusted,taresvalid,FLAGS,targetResvalid,loadPI_valid,pointIDvalid);
         end
         
         %OUTPUT FUNCTION
@@ -1333,7 +1347,7 @@ if FLAGS.balCal == 2
                 y_hat_PI2(:,i)=ANOVA_GRBF(i).y_hat_PI;
             end
         end
-        tareCheck(targetMatrix0,aprxINminGZ2,series0,taresGRBF,FLAGS,targetRes2,y_hat_PI2,pointID0);
+        tareCheck(targetMatrix0,aprxINminGZ2,series0,series0_adjusted,taresGRBF,FLAGS,targetRes2,y_hat_PI2,pointID0);
     end
     
     %Perform Shapiro-Wilk Test on residuals
@@ -1419,7 +1433,7 @@ if FLAGS.balCal == 2
         end
         
         if FLAGS.tare_intercept==1
-            tareCheck(targetMatrixvalid,aprxINminGZ2valid,seriesvalid,taresGRBFvalid,FLAGS,targetRes2valid,loadPI_valid_GRBF,pointIDvalid);
+            tareCheck(targetMatrixvalid,aprxINminGZ2valid,seriesvalid,seriesvalid_adjusted,taresGRBFvalid,FLAGS,targetRes2valid,loadPI_valid_GRBF,pointIDvalid);
         end
         
         %OUTPUT FUNCTION
@@ -1564,7 +1578,7 @@ xcalib_RBF(1,:)=realityShift; %Include global intercept for reality shift
 xcalib_RBF(nterms_RBF+1:end,:)=tareShift; %Series specific intercepts are for tares
 end
 
-function []=tareCheck(targetMatrix0,aprxINminGZ,series0,tares,FLAGS,targetRes,load_PI,pointID0)
+function []=tareCheck(targetMatrix0,aprxINminGZ,series0,series0_adjusted, tares,FLAGS,targetRes,load_PI,pointID0)
 %Check for agreement between tare loads calculated and tare load.
 %Essentially checking residuals at tare load datapoints (typically first
 %point in each series).  Flag if residual is large at these points
@@ -1584,7 +1598,7 @@ function []=tareCheck(targetMatrix0,aprxINminGZ,series0,tares,FLAGS,targetRes,lo
 %datapoint estimates
 
 tareLoad_points=find(all(targetMatrix0==0,2)); %Find tare load datapoints: datapoints where no target load is present
-tareDif=aprxINminGZ(tareLoad_points,:)-tares(series0(tareLoad_points),:); %Find difference between calculated tare loads and global load approximation at tare load datapoints
+tareDif=aprxINminGZ(tareLoad_points,:)-tares(series0_adjusted(tareLoad_points),:); %Find difference between calculated tare loads and global load approximation at tare load datapoints
 
 %Define acceptable margin for difference between tare loads and
 %load approximation
