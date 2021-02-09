@@ -100,15 +100,19 @@ if FLAGS.print == 1 || FLAGS.disp==1
     else
         mcwarn = "Multicollinearity Warning Given: ";
     end
-    vifwarn = max(horzcat(ANOVA.VIF_warn)); % takes the strongest multicollinearity reported over all load channels
-    if vifwarn == 1
-        mcwarn = mcwarn + "TRUE -- Some multicollinearity";
-    elseif vifwarn == 2
-        mcwarn = mcwarn + "TRUE -- Strong Multicollinearity";
-    elseif vifwarn == 0
-        mcwarn = mcwarn + "FALSE";
+    if exist('ANOVA.VIF_warn','var')
+        vifwarn = max(horzcat(ANOVA.VIF_warn)); % takes the strongest multicollinearity reported over all load channels
+        if vifwarn == 1
+            mcwarn = mcwarn + "TRUE -- Some multicollinearity";
+        elseif vifwarn == 2
+            mcwarn = mcwarn + "TRUE -- Strong Multicollinearity";
+        elseif vifwarn == 0
+            mcwarn = mcwarn + "FALSE";
+        else
+            mcwarn = mcwarn + "FALSE -- VIF not calculated";
+        end
     else
-        mcwarn = mcwarn + "FALSE -- VIF not calculated";
+        mcwarn = "N/A--No Algebraic Model";
     end
     Header_cells{10,1}= char(mcwarn);
     if FLAGS.balCal == 2 % GRBF info (10,11)
