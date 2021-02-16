@@ -622,7 +622,7 @@ if out.model~=0 %If any algebraic terms included
     end
     
     %Output results from calibration algebraic section
-    output(section,FLAGS,targetRes,fileName,numpts0,nseries0,...
+    output(section,FLAGS,targetRes,targetMatrix0,fileName,numpts0,nseries0,...
         loadlist,series0,excessVec0,voltdimFlag,loaddimFlag,voltagelist,...
         reslist,numBasis,pointID0,series20,file_output_location,REPORT_NO,algebraic_model,uniqueOut)
 else
@@ -751,7 +751,7 @@ if FLAGS.balVal == 1
         end
         
         section={'Validation Algebraic'};
-        output(section,FLAGS,targetResvalid,fileNamevalid,numptsvalid,nseriesvalid,...
+        output(section,FLAGS,targetResvalid,targetMatrixvalid,fileNamevalid,numptsvalid,nseriesvalid,...
             loadlist, seriesvalid ,excessVecvalid,voltdimFlag,loaddimFlag,voltagelist,...
             reslist,numBasis,pointIDvalid,series2valid,file_output_location,REPORT_NO,algebraic_model,uniqueOut)
     else
@@ -1386,7 +1386,7 @@ if FLAGS.balCal == 2
             [fieldnames(uniqueOut); fieldnames(newStruct)],1);
     end
     
-    output(section,FLAGS,targetRes2,fileName,numpts0,nseries0,...
+    output(section,FLAGS,targetRes2,targetMatrix0,fileName,numpts0,nseries0,...
         loadlist,series0,excessVec0,voltdimFlag,loaddimFlag,voltagelist,...
         reslist,numBasis,pointID0,series20,file_output_location,REPORT_NO,algebraic_model,uniqueOut)
     %END CALIBRATION GRBF SECTION
@@ -1461,7 +1461,7 @@ if FLAGS.balCal == 2
                 [fieldnames(uniqueOut); fieldnames(newStruct)],1);
         end
         
-        output(section,FLAGS,targetRes2valid,fileNamevalid,numptsvalid,nseriesvalid,...
+        output(section,FLAGS,targetRes2valid,targetMatrixvalid,fileNamevalid,numptsvalid,nseriesvalid,...
             loadlist,seriesvalid,excessVecvalid,voltdimFlagvalid,loaddimFlagvalid,voltagelist,...
             reslist,numBasis,pointIDvalid,series2valid,file_output_location,REPORT_NO,algebraic_model,uniqueOut)
     end
@@ -1623,7 +1623,7 @@ function []=tareCheck(targetMatrix0,aprxINminGZ,series0,series0_adjusted, tares,
 
 tareLoad_points=find(all(targetMatrix0==0,2)); %Find tare load datapoints: datapoints where no target load is present
 tareDif=aprxINminGZ(tareLoad_points,:)-tares(series0_adjusted(tareLoad_points),:); %Find difference between calculated tare loads and global load approximation at tare load datapoints
-
+calctareload = aprxINminGZ(tareLoad_points,:);
 %Define acceptable margin for difference between tare loads and
 %load approximation
 if FLAGS.anova==1
@@ -1637,7 +1637,10 @@ probSeries=series0(tareLoad_points(probTare_r)); %Find series for problem tares
 probID=pointID0(tareLoad_points(probTare_r)); %Find point IDs for problem tares
 
 if ~isempty(probTare_r) %If any problem tares found
-    probTable=cell2table([num2cell(probTare_c),num2cell(probSeries),probID,num2cell(tareDif(abs(tareDif)>tareMargin))],'VariableNames',{'Channel','Series','Point_ID','Tare_Difference'}); %Table of possible problem tare datapoints
+    
+    calctare_print = calctareload(abs(tareDif)>tareMargin);
+    taredif_print = (tareDif(abs(tareDif)>tareMargin));
+    probTable=cell2table([num2cell(probTare_c),num2cell(probSeries),probID,num2cell(taredif_print),num2cell(100.*taredif_print./calctare_print)],'VariableNames',{'Channel','Series','Point_ID','Tare_Difference','Relative_Tare_Difference_Perc'}); %Table of possible problem tare datapoints
     if FLAGS.anova==1
         fprintf('\nDifference between tare load estimates and load approximation at tare load datapoints > Load Prediction Interval:\n');
     else
