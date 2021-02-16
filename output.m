@@ -49,6 +49,7 @@ for k=1:length(targetRes(1,:))
     targetload(k) = targetMatrix(I,k);
     tR2(k) = targetRes(:,k)'*targetRes(:,k);     % AJM 6_12_19
 end
+targetload(targetload==0) = 1;
 davariance = var(targetRes);
 gee = mean(targetRes);
 standardDev10 = std(targetRes);
