@@ -27,7 +27,7 @@ function varargout = AOX_GUI(varargin)
 
 % Edit the above text to modify the response to help AOX_GUI
 
-% Last Modified by GUIDE v2.5 19-Jan-2021 15:19:14
+% Last Modified by GUIDE v2.5 12-Feb-2021 11:32:48
 
 
 % Begin initialization code - DO NOT EDIT
@@ -152,247 +152,267 @@ function runbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 set(hObject,'Enable','off','String','...')
 uiresume(handles.figure1);
-if handles.bal_mode.Value==1
-    outStruct.mode=1; %Balance calibration mode
-elseif handles.gen_mode.Value==1
-    outStruct.mode=2; %General Function Approximation
-end
-
-%outStruct.tares = get(handles.tares_FLAGcheck,'Value');
-outStruct.disp = get(handles.disp_FLAGcheck,'Value');
-%outStruct.grbftares = get(handles.grbftares_FLAGcheck,'Value');
-outStruct.dispPlot = get(handles.dispPlot_FLAGcheck,'Value');
-outStruct.print = get(handles.print_FLAGcheck,'Value');
-outStruct.res = get(handles.res_FLAGcheck,'Value');
-outStruct.hist = get(handles.hist_FLAGcheck,'Value');
-outStruct.QQ = get(handles.QQ_FLAGcheck,'Value');
-outStruct.outlier = get(handles.outlier_FLAGcheck,'Value');
-outStruct.numSTD = str2num(get(handles.numSTD,'String'));
-%outStruct.loglog = get(handles.loglog_FLAGcheck,'Value');
-outStruct.zeroed = get(handles.zeroed_FLAGcheck,'Value');
-outStruct.corr = get(handles.corr_FLAGcheck,'Value');
-outStruct.rescorr = get(handles.rescorr_FLAGcheck,'Value');
-outStruct.excel = get(handles.excel_FLAGcheck,'Value');
-
-termList={' F, ',' |F|, ', ' F*F, ', ' F*|F|, ', ' F*G, ', ' |F*G|, ', ' F*|G|, ', ' |F|*G, ', ' F*F*F, ', ' |F*F*F|, ',' F*G*G, ',' F*G*H '};
-customPath = '';
-switch get(get(handles.modelPanel,'SelectedObject'),'Tag')
-    case 'full', outStruct.model = 1;
-    case 'truncated', outStruct.model = 2;
-    case 'linear', outStruct.model = 3;
-    case 'custom'
-        outStruct.model = 4;
-        customPath = get(handles.customPath,'String');
-        outStruct.customMatrix = logical(csvread(customPath,1,1));
-    case 'balanceType'
-        outStruct.model=5;
-        outStruct.balanceEqn=get(handles.balanceType_list,'Value');
-    case 'termSelect'
-        outStruct.model=6;
-        outStruct.termInclude=zeros(10,1);
-        terms=handles.termSelectButton.Tooltip;
-        %Terms are listed in following order:
-        %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
-        
-        outStruct.termInclude(1)=contains(terms,termList{1});
-        outStruct.termInclude(2)=contains(terms,termList{2});
-        outStruct.termInclude(3)=contains(terms,termList{3});
-        outStruct.termInclude(4)=contains(terms,termList{4});
-        outStruct.termInclude(5)=contains(terms,termList{5});
-        outStruct.termInclude(6)=contains(terms,termList{6});
-        outStruct.termInclude(7)=contains(terms,termList{7});
-        outStruct.termInclude(8)=contains(terms,termList{8});
-        outStruct.termInclude(9)=contains(terms,termList{9});
-        outStruct.termInclude(10)=contains(terms,termList{10});
-        outStruct.termInclude(11)=contains(terms,termList{11});
-        outStruct.termInclude(12)=contains(terms,termList{12});
-    case 'noAlg'
-        outStruct.model=0;
-end
-
-outStruct.grbf = 1 + get(handles.grbf,'Value');
-outStruct.basis = str2num(get(handles.numBasisIn,'String'));
-outStruct.selfTerm_str=handles.selfTerm_pop.String(handles.selfTerm_pop.Value);
-outStruct.min_eps=str2num(handles.min_eps.String);
-outStruct.max_eps=str2num(handles.max_eps.String);
-outStruct.GRBF_VIF_thresh=str2num(handles.RBF_VIF_thresh.String);
-
-outStruct.intercept=handles.intercept_pop.Value;
-
-outStruct.anova = get(handles.anova_FLAGcheck,'Value');
-outStruct.BALFIT_Matrix = get(handles.BALFIT_Matrix_FLAGcheck,'Value');
-outStruct.Rec_Model = get(handles.Rec_Model_FLAGcheck,'Value');
-outStruct.anova_pct= str2num(get(handles.anova_pct,'String'));
-outStruct.approx_and_PI_print = get(handles.approx_and_PI_print,'Value');
-
-outStruct.output_location=get(handles.output_location,'String');
-outStruct.subfolder_FLAG=get(handles.subfolder_FLAG,'Value');
-outStruct.calib_model_save_FLAG=get(handles.calib_model_save_FLAG,'Value');
-outStruct.input_save_FLAG=get(handles.input_save_FLAG,'Value');
-
-%Alg Model Refinement Options
-outStruct.AlgModel_opt=handles.AlgModel_opt_pop.Value; % flag number for optional alg model refinement
-if outStruct.AlgModel_opt > 1
-    outStruct.AlgModelName_opt=handles.AlgModel_opt_pop.String{outStruct.AlgModel_opt}; % name of alg model refinement
+if handles.batchin.Value==1
+    outStruct.batch=1;
+    run(get(handles.calPath,'String')); % brings the string array of file paths into workspace
 else
-    outStruct.AlgModelName_opt="0";
-end
-outStruct.VIF_thresh=str2num(handles.VIF_thresh.String);
-outStruct.high_con=handles.termHigh_pop.Value-1;
-outStruct.search_metric=handles.optMet_pop.Value;
-outStruct.zero_threshold=str2num(handles.SVDZero_thresh.String)/100;
-outStruct.sig_pct=str2num(handles.termSig_pct.String);
-
-%Make new subfolder if selected as option
-%Default output location to current directory if empty
-if isempty(outStruct.output_location)==1
-    outStruct.output_location=cd;
+    outStruct.batch=0;
 end
 
-outStruct.REPORT_NO=datestr(now,'yyyy-mmdd-HHMMSS');
-outStruct.output_location=[outStruct.output_location,filesep];
-if outStruct.subfolder_FLAG==1
-    try
-        new_subpath=fullfile(outStruct.output_location,['AOX_BalCal_Results_',outStruct.REPORT_NO]);
-        mkdir(char(new_subpath));
-        outStruct.output_location=[new_subpath,filesep];
-    catch
-        fprintf('Unable to create new subfolder. Saving results in: ');
-        fprintf('%s',outStruct.output_location); fprintf('\n');
+for b = 1:length(calfile)
+    if handles.bal_mode.Value==1
+        outStruct(b).mode=1; %Balance calibration mode
+    elseif handles.gen_mode.Value==1
+        outStruct(b).mode=2; %General Function Approximation
     end
-end
+    [caldir,~,~] = fileparts(calfile(b));
+    outStruct(b).batch = outStruct(1).batch; % indicate batch run
+    %outStruct(b).tares = get(handles.tares_FLAGcheck,'Value');
+    outStruct(b).disp = get(handles.disp_FLAGcheck,'Value');
+    %outStruct(b).grbftares = get(handles.grbftares_FLAGcheck,'Value');
+    outStruct(b).dispPlot = get(handles.dispPlot_FLAGcheck,'Value');
+    outStruct(b).print = get(handles.print_FLAGcheck,'Value');
+    outStruct(b).res = get(handles.res_FLAGcheck,'Value');
+    outStruct(b).hist = get(handles.hist_FLAGcheck,'Value');
+    outStruct(b).QQ = get(handles.QQ_FLAGcheck,'Value');
+    outStruct(b).outlier = get(handles.outlier_FLAGcheck,'Value');
+    outStruct(b).numSTD = str2num(get(handles.numSTD,'String'));
+    %outStruct(b).loglog = get(handles.loglog_FLAGcheck,'Value');
+    outStruct(b).zeroed = get(handles.zeroed_FLAGcheck,'Value');
+    outStruct(b).corr = get(handles.corr_FLAGcheck,'Value');
+    outStruct(b).rescorr = get(handles.rescorr_FLAGcheck,'Value');
+    outStruct(b).excel = get(handles.excel_FLAGcheck,'Value');
+
+    termList={' F, ',' |F|, ', ' F*F, ', ' F*|F|, ', ' F*G, ', ' |F*G|, ', ' F*|G|, ', ' |F|*G, ', ' F*F*F, ', ' |F*F*F|, ',' F*G*G, ',' F*G*H '};
+    customPath = '';
+    switch get(get(handles.modelPanel,'SelectedObject'),'Tag')
+        case 'full', outStruct(b).model = 1;
+        case 'truncated', outStruct(b).model = 2;
+        case 'linear', outStruct(b).model = 3;
+        case 'custom'
+            outStruct(b).model = 4;
+            customPath = get(handles.customPath,'String');
+            outStruct(b).customMatrix = logical(csvread(customPath,1,1));
+        case 'balanceType'
+            outStruct(b).model=5;
+            outStruct(b).balanceEqn=get(handles.balanceType_list,'Value');
+        case 'termSelect'
+            outStruct(b).model=6;
+            outStruct(b).termInclude=zeros(10,1);
+            terms=handles.termSelectButton.Tooltip;
+            %Terms are listed in following order:
+            %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
+
+            outStruct(b).termInclude(1)=contains(terms,termList{1});
+            outStruct(b).termInclude(2)=contains(terms,termList{2});
+            outStruct(b).termInclude(3)=contains(terms,termList{3});
+            outStruct(b).termInclude(4)=contains(terms,termList{4});
+            outStruct(b).termInclude(5)=contains(terms,termList{5});
+            outStruct(b).termInclude(6)=contains(terms,termList{6});
+            outStruct(b).termInclude(7)=contains(terms,termList{7});
+            outStruct(b).termInclude(8)=contains(terms,termList{8});
+            outStruct(b).termInclude(9)=contains(terms,termList{9});
+            outStruct(b).termInclude(10)=contains(terms,termList{10});
+            outStruct(b).termInclude(11)=contains(terms,termList{11});
+            outStruct(b).termInclude(12)=contains(terms,termList{12});
+        case 'noAlg'
+            outStruct(b).model=0;
+    end
+
+    outStruct(b).grbf = 1 + get(handles.grbf,'Value');
+    outStruct(b).basis = str2num(get(handles.numBasisIn,'String'));
+    outStruct(b).selfTerm_str=handles.selfTerm_pop.String(handles.selfTerm_pop.Value);
+    outStruct(b).min_eps=str2num(handles.min_eps.String);
+    outStruct(b).max_eps=str2num(handles.max_eps.String);
+    outStruct(b).GRBF_VIF_thresh=str2num(handles.RBF_VIF_thresh.String);
+
+    outStruct(b).intercept=handles.intercept_pop.Value;
+
+    outStruct(b).anova = get(handles.anova_FLAGcheck,'Value');
+    outStruct(b).BALFIT_Matrix = get(handles.BALFIT_Matrix_FLAGcheck,'Value');
+    outStruct(b).Rec_Model = get(handles.Rec_Model_FLAGcheck,'Value');
+    outStruct(b).anova_pct= str2num(get(handles.anova_pct,'String'));
+    outStruct(b).approx_and_PI_print = get(handles.approx_and_PI_print,'Value');
 
 
-cal.type = 'calibrate';
-cal.Path = get(handles.calPath,'String');
-[~,~,calext] = fileparts(cal.Path);
-switch calext
-    case '.csv'
-        if outStruct.mode==1
-            cal.Range{1} = [get(handles.c11,'String'),'..',get(handles.c12,'String')];
-            cal.CSV(1,:) = a12rc(get(handles.c11,'String'));
-            cal.Range{2} = [get(handles.c21,'String'),'..',get(handles.c22,'String')];
-            cal.CSV(2,:) = a12rc(get(handles.c21,'String'));
-            cal.Range{3} = [get(handles.c31,'String'),'..',get(handles.c32,'String')];
-            cal.CSV(3,:) = a12rc(get(handles.c31,'String'));
-        end
-        
-        cal.loadend          = a12rc(get(handles.c42,'String'));
-        cal.voltend          = a12rc(get(handles.c52,'String'));
-        cal.Range{4} = [get(handles.c41,'String'),'..',get(handles.c42,'String')];
-        cal.CSV(4,:) = a12rc(get(handles.c41,'String'));
-        cal.Range{5} = [get(handles.c51,'String'),'..',get(handles.c52,'String')];
-        cal.CSV(5,:) = a12rc(get(handles.c51,'String'));
-        if exist("ranges.varlocs",'var')
-            cal.varlocs = ranges.varlocs;
-        else
-            cal.varlocs = 0;
-        end
-        outStruct.savePathcal = loadCSV(cal,outStruct.output_location,outStruct.mode);
-        outStruct.cal_create=1; %track if .cal file was created
-    case '.cal'
-        outStruct.savePathcal = cal.Path;
-        
-        if outStruct.input_save_FLAG==1 %Option to copy intput file to output location
-            [newLocation,~,~]=fileparts(outStruct.output_location); %new output location
-            try
-                [cal_path,cal_filename,ext]=fileparts(outStruct.savePathcal); %extract file information
-                if isempty(cal_path)==1 %if .cal file is in current directory
-                    cal_path=fileparts(mfilename('fullpath'));
-                end
-                if strcmp(cal_path,newLocation)==0 %if .cal file is not already in output location
-                    new_path=fullfile(newLocation,[cal_filename,ext]);
-                    copyfile(outStruct.savePathcal,new_path);
-                end
-            catch
-                fprintf('\n UNABLE TO SAVE .cal FILE IN OUTPUT LOCATION. \n');
-            end
-        end
-end
+    outStruct(b).subfolder_FLAG=get(handles.subfolder_FLAG,'Value');
+    outStruct(b).calib_model_save_FLAG=get(handles.calib_model_save_FLAG,'Value');
+    outStruct(b).input_save_FLAG=get(handles.input_save_FLAG,'Value');
 
-outStruct.valid = get(handles.validate,'Value');
-val = struct;
-if outStruct.valid == 1
-    val.type = 'validate';
-    val.Path = get(handles.valPath,'String');
-    [~,~,valext] = fileparts(val.Path);
-    switch valext
+    %Alg Model Refinement Options
+    outStruct(b).AlgModel_opt=handles.AlgModel_opt_pop.Value; % flag number for optional alg model refinement
+    if outStruct(b).AlgModel_opt > 1
+        outStruct(b).AlgModelName_opt=handles.AlgModel_opt_pop.String{outStruct(b).AlgModel_opt}; % name of alg model refinement
+    else
+        outStruct(b).AlgModelName_opt="0";
+    end
+    outStruct(b).VIF_thresh=str2num(handles.VIF_thresh.String);
+    outStruct(b).high_con=handles.termHigh_pop.Value-1;
+    outStruct(b).search_metric=handles.optMet_pop.Value;
+    outStruct(b).zero_threshold=str2num(handles.SVDZero_thresh.String)/100;
+    outStruct(b).sig_pct=str2num(handles.termSig_pct.String);
+
+    % Assign output location
+    %Make new subfolder if selected as option
+    %Default output location to current directory if empty
+    if outStruct(b).batch == 1 % enclosing folder of the current file in batch input
+        outStruct(b).output_location = caldir;
+    else % default behavior before batch
+        outStruct(b).output_location=get(handles.output_location,'String');
+    end
+    if isempty(outStruct(b).output_location)==1
+        outStruct(b).output_location=cd;
+    end
+
+    outStruct(b).REPORT_NO=datestr(now,'yyyy-mmdd-HHMMSS');
+    outStruct(b).output_location=[outStruct(b).output_location,filesep];
+    if outStruct(b).subfolder_FLAG==1
+        try
+            new_subpath=fullfile(outStruct(b).output_location,['AOX_BalCal_Results_',outStruct(b).REPORT_NO]);
+            mkdir(char(new_subpath));
+            outStruct(b).output_location=[new_subpath,filesep];
+        catch
+            fprintf('Unable to create new subfolder. Saving results in: ');
+            fprintf('%s',outStruct(b).output_location); fprintf('\n');
+        end
+    end
+
+
+    cal.type = 'calibrate';
+    if outStruct(b).batch == 1
+        cal.Path = calfile(b); % if batch mode, get file location from batch input file
+    else
+        cal.Path = get(handles.calPath,'String');
+    end
+    [~,~,calext] = fileparts(cal.Path);
+    switch calext
         case '.csv'
-            if outStruct.mode==1
-                val.Range{1} = [get(handles.v11,'String'),'..',get(handles.v12,'String')];
-                val.CSV(1,:) = a12rc(get(handles.v11,'String'));
-                val.Range{2} = [get(handles.v21,'String'),'..',get(handles.v22,'String')];
-                val.CSV(2,:) = a12rc(get(handles.v21,'String'));
-                val.Range{3} = [get(handles.v31,'String'),'..',get(handles.v32,'String')];
-                val.CSV(3,:) = a12rc(get(handles.v31,'String'));
+            if outStruct(b).mode==1
+                cal.Range{1} = [get(handles.c11,'String'),'..',get(handles.c12,'String')];
+                cal.CSV(1,:) = a12rc(get(handles.c11,'String'));
+                cal.Range{2} = [get(handles.c21,'String'),'..',get(handles.c22,'String')];
+                cal.CSV(2,:) = a12rc(get(handles.c21,'String'));
+                cal.Range{3} = [get(handles.c31,'String'),'..',get(handles.c32,'String')];
+                cal.CSV(3,:) = a12rc(get(handles.c31,'String'));
             end
-            
-            val.Range{4} = [get(handles.v41,'String'),'..',get(handles.v42,'String')];
-            val.CSV(4,:) = a12rc(get(handles.v41,'String'));
-            val.Range{5} = [get(handles.v51,'String'),'..',get(handles.v52,'String')];
-            val.CSV(5,:) = a12rc(get(handles.v51,'String'));
-            outStruct.savePathval = loadCSV(val,outStruct.output_location,outStruct.mode);
-            outStruct.val_create=1; %track if .val file was created
-            
-        case '.val'
-            outStruct.savePathval = val.Path;
-            
-            if outStruct.input_save_FLAG==1 %Option to copy intput file to output location
+
+            cal.loadend          = a12rc(get(handles.c42,'String'));
+            cal.voltend          = a12rc(get(handles.c52,'String'));
+            cal.Range{4} = [get(handles.c41,'String'),'..',get(handles.c42,'String')];
+            cal.CSV(4,:) = a12rc(get(handles.c41,'String'));
+            cal.Range{5} = [get(handles.c51,'String'),'..',get(handles.c52,'String')];
+            cal.CSV(5,:) = a12rc(get(handles.c51,'String'));
+            if exist("ranges.varlocs",'var')
+                cal.varlocs = ranges.varlocs;
+            else
+                cal.varlocs = 0;
+            end
+            outStruct(b).savePathcal = loadCSV(cal,outStruct(b).output_location,outStruct(b).mode);
+            outStruct(b).cal_create=1; %track if .cal file was created
+        case '.cal'
+            outStruct(b).savePathcal = cal.Path;
+
+            if outStruct(b).input_save_FLAG==1 %Option to copy intput file to output location
+                [newLocation,~,~]=fileparts(outStruct(b).output_location); %new output location
                 try
-                    [newLocation,~,~]=fileparts(outStruct.output_location); %new output location
-                    [val_path,val_filename,ext]=fileparts(outStruct.savePathval); %extract file information
-                    if isempty(val_path)==1 %if .val file is in current directory
-                        val_path=fileparts(mfilename('fullpath'));
+                    [cal_path,cal_filename,ext]=fileparts(outStruct(b).savePathcal); %extract file information
+                    if isempty(cal_path)==1 %if .cal file is in current directory
+                        cal_path=fileparts(mfilename('fullpath'));
                     end
-                    if strcmp(val_path,newLocation)==0 %if .val file is not already in output location
-                        new_path=fullfile(newLocation,[val_filename,ext]);
-                        copyfile(outStruct.savePathval,new_path);
+                    if strcmp(cal_path,newLocation)==0 %if .cal file is not already in output location
+                        new_path=fullfile(newLocation,[cal_filename,ext]);
+                        copyfile(outStruct(b).savePathcal,new_path);
                     end
                 catch
-                    fprintf('\n UNABLE TO SAVE .val FILE IN OUTPUT LOCATION. \n');
+                    fprintf('\n UNABLE TO SAVE .cal FILE IN OUTPUT LOCATION. \n');
                 end
             end
     end
-end
 
-outStruct.approx = get(handles.approximate,'Value');
-app=struct;
-if outStruct.approx == 1
-    app.type = 'approximate';
-    app.Path = get(handles.appPath,'String');
-    [~,~,appext] = fileparts(app.Path);
-    switch appext
-        case '.csv'
-            if outStruct.mode==1
-                app.Range{1} = [get(handles.a11,'String'),'..',get(handles.a12,'String')];
-                app.CSV(1,:) = a12rc(get(handles.a11,'String'));
-                app.Range{2} = [get(handles.a21,'String'),'..',get(handles.a22,'String')];
-                app.CSV(2,:) = a12rc(get(handles.a21,'String'));
-                app.Range{3} = [get(handles.a31,'String'),'..',get(handles.a32,'String')];
-                app.CSV(3,:) = a12rc(get(handles.a31,'String'));
-            end
-            app.Range{4} = [get(handles.a41,'String'),'..',get(handles.a42,'String')];
-            app.CSV(4,:) = a12rc(get(handles.a41,'String'));
-            outStruct.savePathapp = loadCSV(app,outStruct.output_location,outStruct.mode);
-            outStruct.app_create=1; %track if .app file was created
-        case '.app'
-            outStruct.savePathapp = app.Path;
-            
-            if outStruct.input_save_FLAG==1 %Option to copy intput file to output location
-                try
-                    [newLocation,~,~]=fileparts(outStruct.output_location); %new output location
-                    [app_path,app_filename,ext]=fileparts(outStruct.savePathapp); %extract file information
-                    if isempty(app_path)==1 %if .app file is in current directory
-                        app_path=fileparts(mfilename('fullpath'));
-                    end
-                    if strcmp(app_path,newLocation)==0 %if .app file is not already in output location
-                        new_path=fullfile(newLocation,[app_filename,ext]);
-                        copyfile(outStruct.savePathapp,new_path);
-                    end
-                catch
-                    fprintf('\n UNABLE TO SAVE .app FILE IN OUTPUT LOCATION. \n');
+    outStruct(b).valid = get(handles.validate,'Value');
+    val = struct;
+    if outStruct(b).valid == 1
+        val.type = 'validate';
+        val.Path = get(handles.valPath,'String');
+        [~,~,valext] = fileparts(val.Path);
+        switch valext
+            case '.csv'
+                if outStruct(b).mode==1
+                    val.Range{1} = [get(handles.v11,'String'),'..',get(handles.v12,'String')];
+                    val.CSV(1,:) = a12rc(get(handles.v11,'String'));
+                    val.Range{2} = [get(handles.v21,'String'),'..',get(handles.v22,'String')];
+                    val.CSV(2,:) = a12rc(get(handles.v21,'String'));
+                    val.Range{3} = [get(handles.v31,'String'),'..',get(handles.v32,'String')];
+                    val.CSV(3,:) = a12rc(get(handles.v31,'String'));
                 end
-            end
+
+                val.Range{4} = [get(handles.v41,'String'),'..',get(handles.v42,'String')];
+                val.CSV(4,:) = a12rc(get(handles.v41,'String'));
+                val.Range{5} = [get(handles.v51,'String'),'..',get(handles.v52,'String')];
+                val.CSV(5,:) = a12rc(get(handles.v51,'String'));
+                outStruct(b).savePathval = loadCSV(val,outStruct(b).output_location,outStruct(b).mode);
+                outStruct(b).val_create=1; %track if .val file was created
+
+            case '.val'
+                outStruct(b).savePathval = val.Path;
+
+                if outStruct(b).input_save_FLAG==1 %Option to copy intput file to output location
+                    try
+                        [newLocation,~,~]=fileparts(outStruct(b).output_location); %new output location
+                        [val_path,val_filename,ext]=fileparts(outStruct(b).savePathval); %extract file information
+                        if isempty(val_path)==1 %if .val file is in current directory
+                            val_path=fileparts(mfilename('fullpath'));
+                        end
+                        if strcmp(val_path,newLocation)==0 %if .val file is not already in output location
+                            new_path=fullfile(newLocation,[val_filename,ext]);
+                            copyfile(outStruct(b).savePathval,new_path);
+                        end
+                    catch
+                        fprintf('\n UNABLE TO SAVE .val FILE IN OUTPUT LOCATION. \n');
+                    end
+                end
+        end
+    end
+
+    outStruct(b).approx = get(handles.approximate,'Value');
+    app=struct;
+    if outStruct(b).approx == 1
+        app.type = 'approximate';
+        app.Path = get(handles.appPath,'String');
+        [~,~,appext] = fileparts(app.Path);
+        switch appext
+            case '.csv'
+                if outStruct(b).mode==1
+                    app.Range{1} = [get(handles.a11,'String'),'..',get(handles.a12,'String')];
+                    app.CSV(1,:) = a12rc(get(handles.a11,'String'));
+                    app.Range{2} = [get(handles.a21,'String'),'..',get(handles.a22,'String')];
+                    app.CSV(2,:) = a12rc(get(handles.a21,'String'));
+                    app.Range{3} = [get(handles.a31,'String'),'..',get(handles.a32,'String')];
+                    app.CSV(3,:) = a12rc(get(handles.a31,'String'));
+                end
+                app.Range{4} = [get(handles.a41,'String'),'..',get(handles.a42,'String')];
+                app.CSV(4,:) = a12rc(get(handles.a41,'String'));
+                outStruct(b).savePathapp = loadCSV(app,outStruct(b).output_location,outStruct(b).mode);
+                outStruct(b).app_create=1; %track if .app file was created
+            case '.app'
+                outStruct(b).savePathapp = app.Path;
+
+                if outStruct(b).input_save_FLAG==1 %Option to copy intput file to output location
+                    try
+                        [newLocation,~,~]=fileparts(outStruct(b).output_location); %new output location
+                        [app_path,app_filename,ext]=fileparts(outStruct(b).savePathapp); %extract file information
+                        if isempty(app_path)==1 %if .app file is in current directory
+                            app_path=fileparts(mfilename('fullpath'));
+                        end
+                        if strcmp(app_path,newLocation)==0 %if .app file is not already in output location
+                            new_path=fullfile(newLocation,[app_filename,ext]);
+                            copyfile(outStruct(b).savePathapp,new_path);
+                        end
+                    catch
+                        fprintf('\n UNABLE TO SAVE .app FILE IN OUTPUT LOCATION. \n');
+                    end
+                end
+        end
     end
 end
 
@@ -402,7 +422,7 @@ if outStruct.input_save_FLAG==1 %Option to save run settings
     saveSettings(handles,'runSettings',savePath,outStruct.REPORT_NO);
 end
 
-outStruct.cancel = 0;
+outStruct.cancel = 1;
 
 actionval = 0;
 if handles.calibrate.Value ==1
@@ -565,7 +585,12 @@ function calFind_Callback(hObject, eventdata, handles)
 % hObject    handle to calFind (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[FileName, PathName] = uigetfile('*.csv;*.cal');
+batchflag = get(handles.batchin,'Value');
+if batchflag == 1
+    [FileName, PathName] = uigetfile('*.m');
+else
+    [FileName, PathName] = uigetfile('*.csv;*.cal');
+end
 if FileName ~= 0
     [CurrentPath,~,~] = fileparts(mfilename('fullpath'));
     CurrentPath = [CurrentPath,filesep];
@@ -2970,6 +2995,7 @@ elseif handles.gen_mode.Value==1
     handles.excel_FLAGcheck.String='Print Output and Coefficient csv Files';
     handles.BALFIT_Matrix_FLAGcheck.Visible='Off';
     handles.approx_and_PI_print.String='Print Output w/ Prediction Interval xlsx File';
+
 end
 actionpanel_SelectionChangeFcn(handles.calibrate, eventdata, handles);
 
@@ -3106,7 +3132,54 @@ ranges = autoCSV(get(handles.appPath,'string'),autofill_type);
     set(handles.a42,'string',ranges.V(2));
 
 
-
-
-
-
+% --- Executes on button press in batchin.
+function batchin_Callback(hObject, eventdata, handles)
+% hObject    handle to batchin (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if get(hObject,'Value') == 1
+    handles.calstring.String    = "Batch Calibration Mode, Please Pick Batch Input File:";
+    handles.cal_l1.Visible      ='Off';
+    handles.cal_l2.Visible      ='Off';
+    handles.cal_l3.Visible      ='Off';
+    handles.cal_l4.Visible      ='Off';
+    handles.cal_l5.Visible      ='Off';
+    handles.c11.Visible         ='Off';
+    handles.c12.Visible         ='Off';
+    handles.c21.Visible         ='Off';
+    handles.c22.Visible         ='Off';
+    handles.c31.Visible         ='Off';
+    handles.c32.Visible         ='Off';
+    handles.c41.Visible         ='Off';
+    handles.c42.Visible         ='Off';
+    handles.c51.Visible         ='Off';
+    handles.c52.Visible         ='Off';
+    handles.autocal.Visible     ='Off';
+    handles.validate.Visible    ='Off';
+    handles.approximate.Visible ='Off';
+    handles.batchinfo.Visible   ='On';
+    handles.csvr.String         ="CSV Data Ranges will be automatically calculated. Ensure input files are formatted properly.";
+else
+    handles.calstring.String    = "Calibration Data:";
+    handles.cal_l1.Visible      ='On';
+    handles.cal_l2.Visible      ='On';
+    handles.cal_l3.Visible      ='On';
+    handles.cal_l4.Visible      ='On';
+    handles.cal_l5.Visible      ='On';
+    handles.c11.Visible         ='On';
+    handles.c12.Visible         ='On';
+    handles.c21.Visible         ='On';
+    handles.c22.Visible         ='On';
+    handles.c31.Visible         ='On';
+    handles.c32.Visible         ='On';
+    handles.c41.Visible         ='On';
+    handles.c42.Visible         ='On';
+    handles.c51.Visible         ='On';
+    handles.c52.Visible         ='On';
+    handles.autocal.Visible     ='On';
+    handles.validate.Visible    ='On';
+    handles.approximate.Visible ='On';
+    handles.batchinfo.Visible   ='Off';
+    handles.csvr.String         ="CSV Data File Range";
+end
+% Hint: get(hObject,'Value') returns toggle state of batchin
