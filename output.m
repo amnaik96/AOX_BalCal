@@ -154,7 +154,7 @@ if FLAGS.print == 1 || FLAGS.disp==1
     if FLAGS.mode==1
         % GRBF Counter (for algebraic + grbf models only)
         if contains(section,"GRBF")
-            output_name{1}='Number of GRBFs Used';
+            output_name{1}='Number of RBFs Used';
             section_out=[load_line;cell(1),num2cell(numRBF)];
             csv_output=[csv_output;output_name;section_out;empty_cells];
             if FLAGS.disp==1
