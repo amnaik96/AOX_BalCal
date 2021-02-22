@@ -83,7 +83,6 @@ guidata(hObject, handles);
 % UIWAIT makes AOX_GUI wait for user response (see UIRESUME)
 [CurrentPath,~,~] = fileparts(mfilename('fullpath'));
 fileName = [CurrentPath,filesep,'default.ini'];
-
 handles.termInclude=zeros(10,1); %Initialize for sub gui
 
 loadSettings(handles, fileName, eventdata);
@@ -229,52 +228,6 @@ for b = 1:length(calfile)
     outStruct(b).max_eps=str2num(handles.max_eps.String);
     outStruct(b).GRBF_VIF_thresh=str2num(handles.RBF_VIF_thresh.String);
 
-<<<<<<< HEAD
-cal.type = 'calibrate';
-cal.Path = get(handles.calPath,'String');
-[~,~,calext] = fileparts(cal.Path);
-switch calext
-    case '.csv'
-        if outStruct.mode==1
-            cal.Range{1} = [get(handles.c11,'String'),'..',get(handles.c12,'String')];
-            cal.CSV(1,:) = a12rc(get(handles.c11,'String'));
-            cal.Range{2} = [get(handles.c21,'String'),'..',get(handles.c22,'String')];
-            cal.CSV(2,:) = a12rc(get(handles.c21,'String'));
-            cal.Range{3} = [get(handles.c31,'String'),'..',get(handles.c32,'String')];
-            cal.CSV(3,:) = a12rc(get(handles.c31,'String'));
-        end
-        
-        cal.loadend          = a12rc(get(handles.c42,'String')); % general approximation 
-        cal.voltend          = a12rc(get(handles.c52,'String')); % general approximation
-        cal.Range{4} = [get(handles.c41,'String'),'..',get(handles.c42,'String')];
-        cal.CSV(4,:) = a12rc(get(handles.c41,'String'));
-        cal.Range{5} = [get(handles.c51,'String'),'..',get(handles.c52,'String')];
-        cal.CSV(5,:) = a12rc(get(handles.c51,'String'));
-        if exist("ranges.varlocs",'var') % possible enhancement for loadCSV (does nothing rn)
-            cal.varlocs = ranges.varlocs;
-        else
-            cal.varlocs = 0;
-        end
-        outStruct.savePathcal = loadCSV(cal,outStruct.output_location,outStruct.mode);
-        outStruct.cal_create=1; %track if .cal file was created
-    case '.cal'
-        outStruct.savePathcal = cal.Path;
-        
-        if outStruct.input_save_FLAG==1 %Option to copy intput file to output location
-            [newLocation,~,~]=fileparts(outStruct.output_location); %new output location
-            try
-                [cal_path,cal_filename,ext]=fileparts(outStruct.savePathcal); %extract file information
-                if isempty(cal_path)==1 %if .cal file is in current directory
-                    cal_path=fileparts(mfilename('fullpath'));
-                end
-                if strcmp(cal_path,newLocation)==0 %if .cal file is not already in output location
-                    new_path=fullfile(newLocation,[cal_filename,ext]);
-                    copyfile(outStruct.savePathcal,new_path);
-                end
-            catch
-                fprintf('\n UNABLE TO SAVE .cal FILE IN OUTPUT LOCATION. \n');
-            end
-=======
     outStruct(b).intercept=handles.intercept_pop.Value;
 
     outStruct(b).anova = get(handles.anova_FLAGcheck,'Value');
@@ -323,7 +276,6 @@ switch calext
         catch
             fprintf('Unable to create new subfolder. Saving results in: ');
             fprintf('%s',outStruct(b).output_location); fprintf('\n');
->>>>>>> batchin
         end
     end
 

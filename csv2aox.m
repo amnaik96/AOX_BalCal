@@ -24,13 +24,8 @@ fileID = fopen([foutname '.csv'],'w');                                      %cre
 fprintf(fileID, ';,%s,,,,,,,,,\n', C_text1);                                         %print the 2 headers
 fprintf(fileID, ';,%s,,,,,,,,,\n', C_text2);
 fprintf(fileID, ',,,,,,,,,,\n,,,,,,,,,,\n');
-<<<<<<< HEAD
 fprintf(fileID, '"INDEP VARIABLE=(Alt, T4/T2, Mach)",,,,,,,,,,\n');
 fprintf(fileID, '"DEP VARIABLE=(Net Thrust, Fuel Flow, WC2, EINOx)",,,,,,,,,,\n');
-=======
-fprintf(fileID, '"INDEP VARIABLE=(Alt,T4/T2,Mach)",,,,,,,,,,\n');
-fprintf(fileID, '"DEP VARIABLE=(Thrust,FF,WC2,EINOx)",,,,,,,,,,\n');
->>>>>>> batchin
 fprintf(fileID, ',,,,,,,,,,\n,,,,,,,,,,\n,,,,,,,,,,\n,,,,,,,,,,\n;,,,,,,,,,,\n');                                         %print headers, load capacities, etc
 fprintf(fileID, ';load and response symbols,,,,,,,,,,\n');
 fprintf(fileID, ',,,,Thrust, FF, WC2, EINOx,Alt,T4/T2,Mach\n');

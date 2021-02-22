@@ -46,7 +46,7 @@ if out.cancel == 1
     return
 end
 tic;
-
+disp("Batch debug line input check");
 FLAGS.mode=out.mode; %mode==1 for Balance Calibration, mode==2 for general approximation
 %TO SELECT Algebraic Model                                  set FLAGS.balCal = 1;
 %TO SELECT Algebraic and GRBF Model                         set FLAGS.balCal = 2;
