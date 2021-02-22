@@ -258,9 +258,10 @@ for b = 1:length(calfile)
     %Make new subfolder if selected as option
     %Default output location to current directory if empty
     if outStruct(b).batch == 1 % enclosing folder of the current file in batch input
-        outStruct(b).output_location = caldir;
+        outStruct(b).output_location = char(caldir);
     else % default behavior before batch
         outStruct(b).output_location=get(handles.output_location,'String');
+        
     end
     if isempty(outStruct(b).output_location)==1
         outStruct(b).output_location=cd;
@@ -282,7 +283,7 @@ for b = 1:length(calfile)
 
     cal.type = 'calibrate';
     if outStruct(b).batch == 1
-        cal.Path = calfile(b); % if batch mode, get file location from batch input file
+        cal.Path = char(calfile(b)); % if batch mode, get file location from batch input file
         autofill_type = "cal";
         ranges = autoCSV(cal.Path,autofill_type);
         acsv_set(ranges,autofill_type,hObject,eventdata,handles); % add range data to GUI boxes
@@ -419,27 +420,29 @@ for b = 1:length(calfile)
                 end
         end
     end
+    %Save run settings
+    if outStruct(b).input_save_FLAG==1 %Option to save run settings
+    [savePath,~,~]=fileparts(outStruct(b).output_location); %new output location
+    saveSettings(handles,'runSettings',savePath,outStruct(b).REPORT_NO);
+    end
+    % Cancel flag for stopping BalCal run (assigned per batch file,
+    % currently hard coded)
+    outStruct(b).cancel = 0;
+    
+    actionval = 0;
+    if handles.calibrate.Value ==1
+        actionval=1;
+    elseif handles.validate.Value ==1
+        actionval=2;
+    else
+        actionval=3;
+    end
+    GRBF_defaulteps = get(handles.GRBF_defaultEps,'Value');
+    output2calibFlag = get(handles.output_to_calib_FLAG,'Value');
+    % Record GUI inputs into file
+    guiInputs(outStruct(b),customPath,termList,cal,val,app,actionval,GRBF_defaulteps,output2calibFlag);
 end
 
-%Save run settings
-if outStruct.input_save_FLAG==1 %Option to save run settings
-    [savePath,~,~]=fileparts(outStruct.output_location); %new output location
-    saveSettings(handles,'runSettings',savePath,outStruct.REPORT_NO);
-end
-
-outStruct.cancel = 0;
-
-actionval = 0;
-if handles.calibrate.Value ==1
-    actionval=1;
-elseif handles.validate.Value ==1
-    actionval=2;
-else
-    actionval=3;
-end
-GRBF_defaulteps = get(handles.GRBF_defaultEps,'Value');
-output2calibFlag = get(handles.output_to_calib_FLAG,'Value');
-guiInputs(outStruct,customPath,termList,cal,val,app,actionval,GRBF_defaulteps,output2calibFlag); 
 handles.output = outStruct;
 guidata(hObject, handles);
 
