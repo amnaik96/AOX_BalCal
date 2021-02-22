@@ -157,6 +157,7 @@ if handles.batchin.Value==1
     run(get(handles.calPath,'String')); % brings the string array of file paths into workspace
 else
     outStruct.batch=0;
+    calfile = 0; % set placeholder value for calfile so the batch loop behaves like non-batch 
 end
 
 for b = 1:length(calfile)
@@ -165,7 +166,9 @@ for b = 1:length(calfile)
     elseif handles.gen_mode.Value==1
         outStruct(b).mode=2; %General Function Approximation
     end
-    [caldir,~,~] = fileparts(calfile(b));
+    if handles.batchin.Value == 1
+        [caldir,~,~] = fileparts(calfile(b)); % results for each file write to the location of the original file
+    end
     outStruct(b).batch = outStruct(1).batch; % indicate batch run
     %outStruct(b).tares = get(handles.tares_FLAGcheck,'Value');
     outStruct(b).disp = get(handles.disp_FLAGcheck,'Value');
@@ -281,6 +284,9 @@ for b = 1:length(calfile)
     cal.type = 'calibrate';
     if outStruct(b).batch == 1
         cal.Path = calfile(b); % if batch mode, get file location from batch input file
+        autofill_type = "cal";
+        ranges = autoCSV(cal.Path,autofill_type);
+        acsv_set(ranges,autofill_type,hObject,eventdata,handles); % add range data to GUI boxes
     else
         cal.Path = get(handles.calPath,'String');
     end
@@ -422,7 +428,7 @@ if outStruct.input_save_FLAG==1 %Option to save run settings
     saveSettings(handles,'runSettings',savePath,outStruct.REPORT_NO);
 end
 
-outStruct.cancel = 1;
+outStruct.cancel = 0;
 
 actionval = 0;
 if handles.calibrate.Value ==1
@@ -3050,24 +3056,56 @@ if handles.gen_mode.Value == 1 % current behavior: general approximation just mo
 elseif handles.bal_mode.Value == 1
     autofill_type = "cal";
     ranges = autoCSV(get(handles.calPath,'string'),autofill_type);
-    % set capacity data range
-    set(handles.c11,'string',ranges.cap(1));
-    set(handles.c12,'string',ranges.cap(2));
-    % set natural zeros data range
-    set(handles.c21,'string',ranges.nat(1));
-    set(handles.c22,'string',ranges.nat(2));
-    % set series 1 column data range
-    set(handles.c31,'string',ranges.s1(1));
-    set(handles.c32,'string',ranges.s1(2));
-    % set load array data range
-    set(handles.c41,'string',ranges.L(1));
-    set(handles.c42,'string',ranges.L(2));
-    % set voltage array data range
-    set(handles.c51,'string',ranges.V(1));
-    set(handles.c52,'string',ranges.V(2));
+    acsv_set(ranges,autofill_type,hObject,eventdata,handles); % add range data to GUI boxes
 end
 
-
+function acsv_set(ranges,autofill_type,hObject,eventdata,handles)
+    if autofill_type == "cal"
+        % set capacity data range
+        set(handles.c11,'string',ranges.cap(1));
+        set(handles.c12,'string',ranges.cap(2));
+        % set natural zeros data range
+        set(handles.c21,'string',ranges.nat(1));
+        set(handles.c22,'string',ranges.nat(2));
+        % set series 1 column data range
+        set(handles.c31,'string',ranges.s1(1));
+        set(handles.c32,'string',ranges.s1(2));
+        % set load array data range
+        set(handles.c41,'string',ranges.L(1));
+        set(handles.c42,'string',ranges.L(2));
+        % set voltage array data range
+        set(handles.c51,'string',ranges.V(1));
+        set(handles.c52,'string',ranges.V(2));
+    elseif autofill_type == "val"
+        % set capacity data range
+        set(handles.v11,'string',ranges.cap(1));
+        set(handles.v12,'string',ranges.cap(2));
+        % set natural zeros data range
+        set(handles.v21,'string',ranges.nat(1));
+        set(handles.v22,'string',ranges.nat(2));
+        % set series 1 column data range
+        set(handles.v31,'string',ranges.s1(1));
+        set(handles.v32,'string',ranges.s1(2));
+        % set load array data range
+        set(handles.v41,'string',ranges.L(1));
+        set(handles.v42,'string',ranges.L(2));
+        % set voltage array data range
+        set(handles.v51,'string',ranges.V(1));
+        set(handles.v52,'string',ranges.V(2));
+    elseif autofill_type == "app"
+        % set capacity data range
+        set(handles.a11,'string',ranges.cap(1));
+        set(handles.a12,'string',ranges.cap(2));
+        % set natural zeros data range
+        set(handles.a21,'string',ranges.nat(1));
+        set(handles.a22,'string',ranges.nat(2));
+        % set series 1 column data range
+        set(handles.a31,'string',ranges.s1(1));
+        set(handles.a32,'string',ranges.s1(2));
+        % set voltage array data range
+        set(handles.a41,'string',ranges.V(1));
+        set(handles.a42,'string',ranges.V(2));
+    end
 
 
 % --- Executes when figure1 is resized.
@@ -3082,24 +3120,9 @@ function autoval_Callback(hObject, eventdata, handles)
 % hObject    handle to autoval (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-autofill_type = "val";
-ranges = autoCSV(get(handles.valPath,'string'),autofill_type);
-    % set capacity data range
-    set(handles.v11,'string',ranges.cap(1));
-    set(handles.v12,'string',ranges.cap(2));
-    % set natural zeros data range
-    set(handles.v21,'string',ranges.nat(1));
-    set(handles.v22,'string',ranges.nat(2));
-    % set series 1 column data range
-    set(handles.v31,'string',ranges.s1(1));
-    set(handles.v32,'string',ranges.s1(2));
-    % set load array data range
-    set(handles.v41,'string',ranges.L(1));
-    set(handles.v42,'string',ranges.L(2));
-    % set voltage array data range
-    set(handles.v51,'string',ranges.V(1));
-    set(handles.v52,'string',ranges.V(2));
-
+    autofill_type = "val";
+    ranges = autoCSV(get(handles.valPath,'string'),autofill_type);
+    acsv_set(ranges,autofill_type,hObject,eventdata,handles); % add range data to GUI boxes
 
 
 % --- Executes on button press in pushbutton20.
@@ -3116,20 +3139,10 @@ function autoapp_Callback(hObject, eventdata, handles)
 % hObject    handle to autoapp (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-autofill_type = "app";
-ranges = autoCSV(get(handles.appPath,'string'),autofill_type);
-    % set capacity data range
-    set(handles.a11,'string',ranges.cap(1));
-    set(handles.a12,'string',ranges.cap(2));
-    % set natural zeros data range
-    set(handles.a21,'string',ranges.nat(1));
-    set(handles.a22,'string',ranges.nat(2));
-    % set series 1 column data range
-    set(handles.a31,'string',ranges.s1(1));
-    set(handles.a32,'string',ranges.s1(2));
-    % set voltage array data range
-    set(handles.a41,'string',ranges.V(1));
-    set(handles.a42,'string',ranges.V(2));
+    autofill_type = "app";
+    ranges = autoCSV(get(handles.appPath,'string'),autofill_type);
+    acsv_set(ranges,autofill_type,hObject,eventdata,handles); % add range data to GUI boxes
+
 
 
 % --- Executes on button press in batchin.
@@ -3137,49 +3150,49 @@ function batchin_Callback(hObject, eventdata, handles)
 % hObject    handle to batchin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if get(hObject,'Value') == 1
-    handles.calstring.String    = "Batch Calibration Mode, Please Pick Batch Input File:";
-    handles.cal_l1.Visible      ='Off';
-    handles.cal_l2.Visible      ='Off';
-    handles.cal_l3.Visible      ='Off';
-    handles.cal_l4.Visible      ='Off';
-    handles.cal_l5.Visible      ='Off';
-    handles.c11.Visible         ='Off';
-    handles.c12.Visible         ='Off';
-    handles.c21.Visible         ='Off';
-    handles.c22.Visible         ='Off';
-    handles.c31.Visible         ='Off';
-    handles.c32.Visible         ='Off';
-    handles.c41.Visible         ='Off';
-    handles.c42.Visible         ='Off';
-    handles.c51.Visible         ='Off';
-    handles.c52.Visible         ='Off';
-    handles.autocal.Visible     ='Off';
-    handles.validate.Visible    ='Off';
-    handles.approximate.Visible ='Off';
-    handles.batchinfo.Visible   ='On';
-    handles.csvr.String         ="CSV Data Ranges will be automatically calculated. Ensure input files are formatted properly.";
-else
-    handles.calstring.String    = "Calibration Data:";
-    handles.cal_l1.Visible      ='On';
-    handles.cal_l2.Visible      ='On';
-    handles.cal_l3.Visible      ='On';
-    handles.cal_l4.Visible      ='On';
-    handles.cal_l5.Visible      ='On';
-    handles.c11.Visible         ='On';
-    handles.c12.Visible         ='On';
-    handles.c21.Visible         ='On';
-    handles.c22.Visible         ='On';
-    handles.c31.Visible         ='On';
-    handles.c32.Visible         ='On';
-    handles.c41.Visible         ='On';
-    handles.c42.Visible         ='On';
-    handles.c51.Visible         ='On';
-    handles.c52.Visible         ='On';
-    handles.autocal.Visible     ='On';
-    handles.validate.Visible    ='On';
-    handles.approximate.Visible ='On';
-    handles.batchinfo.Visible   ='Off';
-    handles.csvr.String         ="CSV Data File Range";
-end
+    if get(hObject,'Value') == 1
+        handles.calstring.String    = "Batch Calibration Mode, Please Pick Batch Input File:";
+        handles.cal_l1.Visible      ='Off';
+        handles.cal_l2.Visible      ='Off';
+        handles.cal_l3.Visible      ='Off';
+        handles.cal_l4.Visible      ='Off';
+        handles.cal_l5.Visible      ='Off';
+        handles.c11.Visible         ='Off';
+        handles.c12.Visible         ='Off';
+        handles.c21.Visible         ='Off';
+        handles.c22.Visible         ='Off';
+        handles.c31.Visible         ='Off';
+        handles.c32.Visible         ='Off';
+        handles.c41.Visible         ='Off';
+        handles.c42.Visible         ='Off';
+        handles.c51.Visible         ='Off';
+        handles.c52.Visible         ='Off';
+        handles.autocal.Visible     ='Off';
+        handles.validate.Visible    ='Off';
+        handles.approximate.Visible ='Off';
+        handles.batchinfo.Visible   ='On';
+        handles.csvr.String         ="CSV Data Ranges will be automatically calculated. Ensure input files are formatted properly.";
+    else
+        handles.calstring.String    = "Calibration Data:";
+        handles.cal_l1.Visible      ='On';
+        handles.cal_l2.Visible      ='On';
+        handles.cal_l3.Visible      ='On';
+        handles.cal_l4.Visible      ='On';
+        handles.cal_l5.Visible      ='On';
+        handles.c11.Visible         ='On';
+        handles.c12.Visible         ='On';
+        handles.c21.Visible         ='On';
+        handles.c22.Visible         ='On';
+        handles.c31.Visible         ='On';
+        handles.c32.Visible         ='On';
+        handles.c41.Visible         ='On';
+        handles.c42.Visible         ='On';
+        handles.c51.Visible         ='On';
+        handles.c52.Visible         ='On';
+        handles.autocal.Visible     ='On';
+        handles.validate.Visible    ='On';
+        handles.approximate.Visible ='On';
+        handles.batchinfo.Visible   ='Off';
+        handles.csvr.String         ="CSV Data File Range";
+    end
 % Hint: get(hObject,'Value') returns toggle state of batchin
