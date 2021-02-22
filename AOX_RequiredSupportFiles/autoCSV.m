@@ -74,13 +74,13 @@ function [ranges] = autoCSV(fname,type)
                     nv1 = string(V(i,v1+1:v1end)); nv1 = strtrim(nv1); % NAME of first var
                     nv2 = string(V(i,v2start:v2-1)); nv2 = strtrim(nv2); % NAME of 2nd var, coms_i+2 because comma + space
                     nv = [nv; [nv1 nv2]]; % NV: FIRST ROW = IND. VAR, 2ND ROW = DEP. VAR
-                    [vrow,~] = find(contains(C,nv1),1,'last'); %finds the row containing header for "data for analysis" portion
+                    [vrow,~] = find(contains(C,nv1),1,'last'); %finds the row containing header for "data for analysis" portion (last occurrence of variable name)
 
                     symbs = C(hrow,:);
                     %find columns of the first and last variable
                     vcol = zeros(1,2);
                     for n=1:nv.size(2)
-                        for j = 1:length(symbs)
+                        for j = 1:length(symbs) % search through every cell in header row
                             if strcmp(nv(i,n),symbs(j)) == 1 % find column of FIRST variable
                                 vcol(n) = j;
                             end

@@ -50,6 +50,7 @@ tic;
 FLAGS.mode=out.mode; %mode==1 for Balance Calibration, mode==2 for general approximation
 %TO SELECT Algebraic Model                                  set FLAGS.balCal = 1;
 %TO SELECT Algebraic and GRBF Model                         set FLAGS.balCal = 2;
+FLAGS.batch = out.batch; % checks if batch mode was enabled (out.batch = 1)
 FLAGS.balCal = out.grbf;
 %DEFINE THE NUMBER OF BASIS FUNCTIONS
 numBasis = out.basis;
