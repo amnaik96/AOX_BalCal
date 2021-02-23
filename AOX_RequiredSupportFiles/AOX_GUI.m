@@ -153,22 +153,42 @@ set(hObject,'Enable','off','String','...')
 uiresume(handles.figure1);
 if handles.batchin.Value==1
     outStruct.batch=1;
-    run(get(handles.calPath,'String')); % brings the string array of file paths into workspace
+    [calfile, valfile, apprxfile, bgmode, vmode, amode, outloc] = batchprocess(get(handles.calPath,'String')); % brings the string array of file paths into workspace
 else
     outStruct.batch=0;
-    calfile = 0; % set placeholder value for calfile so the batch loop behaves like non-batch 
+    calfile = 0; % set placeholder value for calfile so the batch loop behaves like non-batch
+    valfile = 0; % set placeholder value for valfile so the batch loop behaves like non-batch
+    apprxfile = 0; % set placeholder value for apprxfile so the batch loop behaves like non-batch
 end
 
 for b = 1:length(calfile)
+    %% Individual Handle Assignments if in batch mode
+    outStruct(b).batch = outStruct(1).batch; % indicate batch run
+    if outStruct(b).batch == 1
+        % Program Mode
+        handles.bal_mode.Value = bgmode(b,1);
+        handles.gen_mode.Value = bgmode(b,2);
+        % Calibration
+        handles.calPath.String = calfile(b);
+        % Validation
+        handles.validate.Value = vmode(b);
+        handles.valPath.String = valfile(b);
+        % Approximation
+        handles.approximate.Value = amode(b);
+        handles.appPath.String = apprxfile(b);
+        % Output Location
+        handles.output_location.String = outloc(b);
+    end
+
     if handles.bal_mode.Value==1
         outStruct(b).mode=1; %Balance calibration mode
     elseif handles.gen_mode.Value==1
         outStruct(b).mode=2; %General Function Approximation
     end
-    if handles.batchin.Value == 1
+    if outStruct(b).batch == 1
         [caldir,~,~] = fileparts(calfile(b)); % results for each file write to the location of the original file
     end
-    outStruct(b).batch = outStruct(1).batch; % indicate batch run
+    
     %outStruct(b).tares = get(handles.tares_FLAGcheck,'Value');
     outStruct(b).disp = get(handles.disp_FLAGcheck,'Value');
     %outStruct(b).grbftares = get(handles.grbftares_FLAGcheck,'Value');
@@ -257,12 +277,10 @@ for b = 1:length(calfile)
     % Assign output location
     %Make new subfolder if selected as option
     %Default output location to current directory if empty
-    if outStruct(b).batch == 1 % enclosing folder of the current file in batch input
-        outStruct(b).output_location = char(caldir);
-    else % default behavior before batch
-        outStruct(b).output_location=get(handles.output_location,'String');
-        
-    end
+    % if outStruct(b).batch == 1 % enclosing folder of the current file in batch input
+    %     outStruct(b).output_location = char(caldir);
+    % else % default behavior before batch
+    outStruct(b).output_location=char(get(handles.output_location,'String'));
     if isempty(outStruct(b).output_location)==1
         outStruct(b).output_location=cd;
     end
@@ -282,13 +300,11 @@ for b = 1:length(calfile)
 
 
     cal.type = 'calibrate';
+    cal.Path = char(get(handles.calPath,'String'));
     if outStruct(b).batch == 1
-        cal.Path = char(calfile(b)); % if batch mode, get file location from batch input file
         autofill_type = "cal";
         ranges = autoCSV(cal.Path,autofill_type);
         acsv_set(ranges,autofill_type,hObject,eventdata,handles); % add range data to GUI boxes
-    else
-        cal.Path = get(handles.calPath,'String');
     end
     [~,~,calext] = fileparts(cal.Path);
     switch calext
@@ -339,7 +355,12 @@ for b = 1:length(calfile)
     val = struct;
     if outStruct(b).valid == 1
         val.type = 'validate';
-        val.Path = get(handles.valPath,'String');
+        val.Path = char(get(handles.valPath,'String'));
+        if outStruct(b).batch == 1
+            autofill_type = "val";
+            ranges = autoCSV(val.Path,autofill_type);
+            acsv_set(ranges,autofill_type,hObject,eventdata,handles); % add range data to GUI boxes
+        end
         [~,~,valext] = fileparts(val.Path);
         switch valext
             case '.csv'
@@ -384,7 +405,12 @@ for b = 1:length(calfile)
     app=struct;
     if outStruct(b).approx == 1
         app.type = 'approximate';
-        app.Path = get(handles.appPath,'String');
+        app.Path = char(get(handles.appPath,'String'));
+        if outStruct(b).batch == 1
+            autofill_type = "app";
+            ranges = autoCSV(app.Path,autofill_type);
+            acsv_set(ranges,autofill_type,hObject,eventdata,handles); % add range data to GUI boxes
+        end
         [~,~,appext] = fileparts(app.Path);
         switch appext
             case '.csv'
@@ -2383,7 +2409,7 @@ end
 
 default.bal_mode=handles.bal_mode.Value;
 default.gen_mode=handles.gen_mode.Value;
-
+default.batch=handles.batchin.Value;
 %default.tares = get(handles.tares_FLAGcheck,'Value');
 default.disp = get(handles.disp_FLAGcheck,'Value');
 default.dispPlot = get(handles.dispPlot_FLAGcheck,'Value');
@@ -2486,6 +2512,7 @@ default.input_save_FLAG=get(handles.input_save_FLAG,'Value');
 fullfileName = [filePath,filesep,fileName,'.ini'];
 save(fullfileName,'default');
 
+
 function []=loadSettings(handles, fullfileName, eventdata)
 %Function loads and sets GUI settings from .ini file.
 %Used to load default settings or settings from previous run
@@ -2503,6 +2530,9 @@ if exist(fullfileName,'file')
         handles.gen_mode.Value=default.gen_mode;
         modepanel_SelectionChangedFcn(handles.bal_mode, eventdata, handles)
         
+        handles.batchin.Value=default.batch;
+        batchin_Callback(handles.batchin,eventdata,handles);
+
         %set(handles.tares_FLAGcheck,'Value',default.tares);
         set(handles.disp_FLAGcheck,'Value',default.disp);
         set(handles.dispPlot_FLAGcheck,'Value',default.dispPlot);
@@ -3004,7 +3034,10 @@ elseif handles.gen_mode.Value==1
     handles.BALFIT_Matrix_FLAGcheck.Visible='Off';
     handles.approx_and_PI_print.String='Print Output w/ Prediction Interval xlsx File';
 
+
+
 end
+
 actionpanel_SelectionChangeFcn(handles.calibrate, eventdata, handles);
 
 
