@@ -9,9 +9,9 @@ pmode  = [1,1];    % Program Mode for each file
                     %   2: General Function Approximation Mode
 
 fmode   = [1,2];    % File Analysis Mode for each file:
-                    %   1: cal only
-                    %   2: + val
-                    %   3: + approx
+                    %   1: calibration only
+                    %   2: + validation
+                    %   3: + approximation
                     %   EACH FILE MUST HAVE A MODE ASSOCIATED WITH IT
                     %   SIZE of fmode, calfile, valfile, apprxfile MUST == NFILE
 
