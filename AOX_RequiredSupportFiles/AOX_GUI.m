@@ -3082,12 +3082,7 @@ function autocal_Callback(hObject, eventdata, handles)
 if handles.gen_mode.Value == 1 % current behavior: general approximation just modifies the "cal" section of the GUI
     autofill_type = "gen";
     ranges = autoCSV(get(handles.calPath,'string'),autofill_type);
-    % set output array
-    set(handles.c41,'string',ranges.O(1));
-    set(handles.c42,'string',ranges.O(2));
-    % set output array
-    set(handles.c51,'string',ranges.I(1));
-    set(handles.c52,'string',ranges.I(2));
+    acsv_set(ranges,autofill_type,hObject,eventdata,handles); % add range data to GUI boxes
 elseif handles.bal_mode.Value == 1
     autofill_type = "cal";
     ranges = autoCSV(get(handles.calPath,'string'),autofill_type);
@@ -3140,6 +3135,13 @@ function acsv_set(ranges,autofill_type,hObject,eventdata,handles)
         % set voltage array data range
         set(handles.a41,'string',ranges.V(1));
         set(handles.a42,'string',ranges.V(2));
+    elseif autofill_type == "gen"
+        % set output array
+        set(handles.c41,'string',ranges.O(1));
+        set(handles.c42,'string',ranges.O(2));
+        % set input array
+        set(handles.c51,'string',ranges.I(1));
+        set(handles.c52,'string',ranges.I(2));
     end
 
 
@@ -3186,7 +3188,8 @@ function batchin_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     if get(hObject,'Value') == 1
-        handles.calstring.String    = "Batch Calibration Mode, Please Pick Batch Input File:";
+        % Initial GUI work --v1
+        handles.calstring.String    = "Select Batch Input File:";
         handles.cal_l1.Visible      ='Off';
         handles.cal_l2.Visible      ='Off';
         handles.cal_l3.Visible      ='Off';
@@ -3206,7 +3209,14 @@ function batchin_Callback(hObject, eventdata, handles)
         handles.validate.Visible    ='Off';
         handles.approximate.Visible ='Off';
         handles.batchinfo.Visible   ='On';
-        handles.csvr.String         ="CSV Data Ranges will be automatically calculated. Ensure input files are formatted properly.";
+        handles.csvr.String         ="CSV Data Ranges will be automatically calculated. Ensure .csv data files are formatted properly.";
+        % Extra GUI refinement --v2
+        handles.calcsv.Title        ='Batch Input';
+        handles.valcsv.Visible      ='Off'; % Hide entire validation panel
+        handles.appcsv.Visible      ='Off'; % Hide entire approximation panel
+        handles.actionpanel.Visible ='Off'; % Hide entire action panel
+        % experimental: mess with GUI section sizes
+        handles.modelPanel.Position(4)   =0.5165;
     else
         handles.calstring.String    = "Calibration Data:";
         handles.cal_l1.Visible      ='On';
@@ -3229,5 +3239,12 @@ function batchin_Callback(hObject, eventdata, handles)
         handles.approximate.Visible ='On';
         handles.batchinfo.Visible   ='Off';
         handles.csvr.String         ="CSV Data File Range";
+        % Extra GUI refinement --v2
+        handles.calcsv.Title        ='Calibration';
+        handles.valcsv.Visible      ='On'; % Hide entire validation panel
+        handles.appcsv.Visible      ='On'; % Hide entire approximation panel
+        handles.actionpanel.Visible ='On'; % Hide entire action panel
+        % experimental: mess with GUI section sizes
+        handles.modelPanel.Position(4)   =0.37416777629826903; % original size
     end
 % Hint: get(hObject,'Value') returns toggle state of batchin
