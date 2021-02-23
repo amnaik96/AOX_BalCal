@@ -3215,6 +3215,8 @@ function batchin_Callback(hObject, eventdata, handles)
         handles.valcsv.Visible      ='Off'; % Hide entire validation panel
         handles.appcsv.Visible      ='Off'; % Hide entire approximation panel
         handles.actionpanel.Visible ='Off'; % Hide entire action panel
+        handles.bal_mode.Visible    ='Off';
+        handles.gen_mode.Visible    ='Off';
         % experimental: mess with GUI section sizes
         handles.modelPanel.Position(4)   =0.5165;
     else
@@ -3244,6 +3246,8 @@ function batchin_Callback(hObject, eventdata, handles)
         handles.valcsv.Visible      ='On'; % Hide entire validation panel
         handles.appcsv.Visible      ='On'; % Hide entire approximation panel
         handles.actionpanel.Visible ='On'; % Hide entire action panel
+        handles.bal_mode.Visible    ='On';
+        handles.gen_mode.Visible    ='On';
         % experimental: mess with GUI section sizes
         handles.modelPanel.Position(4)   =0.37416777629826903; % original size
     end
