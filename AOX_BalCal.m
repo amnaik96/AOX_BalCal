@@ -50,12 +50,9 @@ tic;
 % Batch mode handling
 nfile = length(out);
 
-
 for b = 1:nfile
     diary consoleoutput.txt
-    if out(b).batch == 1
-        fprintf("-----------------------\nBATCH MODE: STARTING FILE " + string(b) + " OF " + string(nfile) + ".\n-----------------------\n");
-    end
+
 %% ASSIGN USER INPUT PARAMETERS
     FLAGS.mode=out(b).mode; %mode==1 for Balance Calibration, mode==2 for general approximation
     %TO SELECT Algebraic Model                                  set FLAGS.balCal = 1;
@@ -201,6 +198,9 @@ for b = 1:nfile
     %                       END USER INPUT SECTION
     %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %                       INITIALIZATION SECTION
+    if FLAGS.batch == 1
+        fprintf("-----------------------\nBATCH MODE: STARTING FILE " + string(b) + " OF " + string(nfile) + ".\n-----------------------\n");
+    end
     fprintf('\n Starting Test: '); fprintf(REPORT_NO); fprintf('\n');
     fprintf('\nWorking ...\n')
 
@@ -1568,7 +1568,11 @@ for b = 1:nfile
     fclose(fileID);
     movefile('consoleoutput.txt', strcat(file_output_location,'consoleoutput.txt'))
     
-    if b == nfile % console output readout happens at end of ALL processing. 
+    % clear some of the output data to avoid problems with batch mode--not sure this is necessary. Need to test.
+    % if FLAGS.batch == 1
+    %     clear uniqueOut excessVec targetMatrix
+    % end
+    if b == nfile % timing and deployment. 
         runTime=toc;
         if isdeployed % Optional, use if you want the non-deployed version to not exit immediately
             input('Press enter to finish and close');
