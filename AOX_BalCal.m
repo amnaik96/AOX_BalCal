@@ -256,8 +256,8 @@ for b = 1:nfile
         %Build bustom equation matrix based on the balance type selected
         balanceType=out(b).balanceEqn;
         %Select the terms to be included
-        %Terms are listed in following order:
-        % (INTERCEPT), F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
+        %Terms are listed in following order
+        %(INTERCEPT), F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
         termInclude=zeros(12,1); %Tracker for terms to be included, not including intercept
         if balanceType==1
             termInclude([1,3,5])=1;
@@ -289,6 +289,9 @@ for b = 1:nfile
         elseif balanceType==10
             termInclude([1,2,5])=1;
             algebraic_model={'BALANCE TYPE 2-F'};
+        elseif balanceType==11
+            termInclude([9:12])=1;
+            algebraic_model={'Cubic Terms Only'};
         end
         %Assemble custom matrix
         customMatrix=customMatrix_builder(voltdimFlag,termInclude,loaddimFlag,FLAGS.glob_intercept);
@@ -302,10 +305,9 @@ for b = 1:nfile
     else
         %Standard Full, truncated, linear model, or no algebraic model
         %Select the terms to be included
-        %Terms are listed in following order:
-        % (INTERCEPT), F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F,
-        % |F*F*F|, F*G*G, F*G*H, |F|*G*H, F*|G*H|
-        termInclude=zeros(12,1);
+        Terms are listed in following order:
+        % (INTERCEPT), F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
+        termInclude=zeros(12,1); % again, not including intercept
         if FLAGS.model==3 %Linear eqn
             termInclude(1)=1; %Include only linear terms
             algebraic_model={'LINEAR'};
