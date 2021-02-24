@@ -71,7 +71,7 @@ for b = 1:nfile
     FLAGS.PRESS_selfTerm=match(3);
     FLAGS.PI_selfTerm=match(4);
     FLAGS.VIF_selfTerm=match(5);
-    FLAGS.GRBF_VIF_thresth = out(b).GRBF_VIF_thresh;
+    FLAGS.GRBF_VIF_thresh = out(b).GRBF_VIF_thresh;
 
     %SELECT ALGEBRAIC MODE                                      set FLAGS.model = 1 (full)
     %                                                                             2 (trunc)
