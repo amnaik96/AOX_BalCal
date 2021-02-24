@@ -289,9 +289,6 @@ for b = 1:nfile
         elseif balanceType==10
             termInclude([1,2,5])=1;
             algebraic_model={'BALANCE TYPE 2-F'};
-        elseif balanceType==11
-            termInclude([9:12])=1;
-            algebraic_model={'Cubic Terms Only'};
         end
         %Assemble custom matrix
         customMatrix=customMatrix_builder(voltdimFlag,termInclude,loaddimFlag,FLAGS.glob_intercept);
