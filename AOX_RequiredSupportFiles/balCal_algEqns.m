@@ -23,14 +23,14 @@ function [in_comb,high,high_CELL] = balCal_algEqns(model_FLAG,in,series,intercep
 
     % Term order for full equation set:
     % INTERCEPT (1)
-    % F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G (2-8)
-    % F*F*F, |F*F*F|, |F|*F*F, F*|F|*F, F*F*|F F*G*G, F*|G*G|, |F|*G*G, F*G*H, |F|*G*H, F*|G*H| (9-)
+    %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, (2-13)
+    % |F*G*G|, F*G*|G|, |F*G*H|  (14-16)
 
     if nargin <6 % checks number of arguments into function to assign normFLAG. 
         normFLAG = 0; % nominally 0
     end
 
-    if normFLAG == 1
+    if normFLAG == 1 % note: this is currently non functional. normFLAG is deprecated.
         range = max(in) - min(in);
         scale = max(max(abs(in)));
         shift = min(in) + range/2;
@@ -45,15 +45,15 @@ function [in_comb,high,high_CELL] = balCal_algEqns(model_FLAG,in,series,intercep
     d = size(in_n,2); %data dimensionality.
 
     % Number of combinations for each term type
-    termNum=zeros(1,13);
+    termNum=zeros(1,16);
     termNum(1)=1;
     termNum([2,3,4,5,10,11])=d;
     if d >= 2
         termNum([6,7,8,9])=(d^2-d)/2;
-        termNum(12)=factorial(d)/factorial(d-2); % nPr
+        termNum(12,14,15)=factorial(d)/factorial(d-2); % nPr
     end
     if d >= 3
-        termNum(13)=factorial(d)/(factorial(3)*factorial(d-3)); % nCr
+        termNum(13,16)=factorial(d)/(factorial(3)*factorial(d-3)); % nCr
     end
 
     glob_intercept=ones(nPoint,1); %Global Intercept Term
@@ -132,9 +132,9 @@ function [in_comb,high,high_CELL] = balCal_algEqns(model_FLAG,in,series,intercep
 
     if d>=2
         j = 1;
-        abs_iniinj = zeros(nPoint,(d^2-d)/2); % |F*G|
-        ini_absinj = zeros(nPoint,(d^2-d)/2); % F*|G|
-        absini_inj = zeros(nPoint,(d^2-d)/2); % |F|*G
+        abs_iniinj      = zeros(nPoint,(d^2-d)/2); % |F*G|
+        ini_absinj      = zeros(nPoint,(d^2-d)/2); % F*|G|
+        absini_inj      = zeros(nPoint,(d^2-d)/2); % |F|*G
         
         abs_iniinj_high=zeros((d^2-d)/2,d); %hierarchy for absolute value cross terms
         ini_absinj_high=zeros((d^2-d)/2,2*d); %hierarchy for ini_absinj terms
@@ -160,8 +160,14 @@ function [in_comb,high,high_CELL] = balCal_algEqns(model_FLAG,in,series,intercep
 
     if d>=2 % cubic terms (2 unique)
         j=1;
-        ini_inj_inj= zeros(nPoint, factorial(d)/factorial(d-2)); % Term F*G*G
-        ini_inj_inj_high= zeros(termNum(12), sum(termNum)); %Hierarchy for Term F*G*G
+        ini_inj_inj         = zeros(nPoint, factorial(d)/factorial(d-2)); % Term F*G*G
+        abs_iniinjinj       = zeros(nPoint,(d^2-d)/2); % |F*G*G|
+        ini_inj_absinj      = zeros(nPoint,(d^2-d)/2); % F*G*|G|
+
+        ini_inj_inj_high    = zeros(termNum(12), sum(termNum)); %Hierarchy for Term F*G*G
+        ini_inj_inj_high    = zeros(termNum(14), sum(termNum)); %Hierarchy for Term |F*G*G|
+        ini_inj_inj_high    = zeros(termNum(15), sum(termNum)); %Hierarchy for Term F*G*|G|
+        
         %For assembling term 'F*G*G' a slightly different approach is needed
         %because the order matters:
         % For example, if we have 3 input variables x, y, and z, we want all the
