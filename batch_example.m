@@ -15,7 +15,6 @@ fmode   = [1,2];    % File Analysis Mode for each file:
                     %   EACH FILE MUST HAVE A MODE ASSOCIATED WITH IT
                     %   SIZE of fmode, calfile, valfile, apprxfile MUST == NFILE
 
-
 % calfile, valfile, and approxfile MUST be same size! i.e. if file 1 wants validation, but file 2 doesn't, set a placeholder for the first value in string array
 %   MUST also be VERTICAL vectors--n rows, 1 column. They will be combined into one n x 3 array by batch file processing.
 % For files: use "/" as folder delimiter for compatibility with Unix/Mac and Windows. Start the path AFTER root balcal path (for now)

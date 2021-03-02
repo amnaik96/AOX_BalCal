@@ -14,9 +14,10 @@ function customMatrix=customMatrix_builder(voltdimFlag,termInclude,loaddimFlag, 
 %  customMatrix = Custom Equation Matrix for calculations
 
 %First determine the index numbers for each term in the full equation set
-termIndex=cell(12,1);
+termIndex=cell(15,1);
 %Terms are listed in following order:
-%  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
+%  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, (1-12)
+% |F*G*G|, F*G*|G|, |F*G*H|  (13-15)
 termIndex{1}=(1:voltdimFlag)'; % F
 termIndex{2}=(1:voltdimFlag)'+max(cell2mat(termIndex)); % |F|
 termIndex{3}=(1:voltdimFlag)'+max(cell2mat(termIndex)); % F*F
@@ -31,9 +32,12 @@ termIndex{9}=(1:voltdimFlag)'+max(cell2mat(termIndex)); % F*F*F
 termIndex{10}=(1:voltdimFlag)'+max(cell2mat(termIndex)); % |F*F*F|
 if voltdimFlag>=2
 termIndex{11}=(1:(factorial(voltdimFlag)/factorial(voltdimFlag-2)))'+max(cell2mat(termIndex)); % F*G*G
+termIndex{13}=(1:(factorial(voltdimFlag)/factorial(voltdimFlag-2)))'+max(cell2mat(termIndex)); % |F*G*G|
+termIndex{14}=(1:(factorial(voltdimFlag)/factorial(voltdimFlag-2)))'+max(cell2mat(termIndex)); % F*G*|G|
 end
 if voltdimFlag>=3
 termIndex{12}=(1:(factorial(voltdimFlag)/(factorial(3)*factorial(voltdimFlag-3))))'+max(cell2mat(termIndex)); % F*G*H
+termIndex{15}=(1:(factorial(voltdimFlag)/(factorial(3)*factorial(voltdimFlag-3))))'+max(cell2mat(termIndex)); % |F*G*H|
 end
 
 %Build a custom equation matrix based on the terms selected and the data
