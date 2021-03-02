@@ -301,9 +301,17 @@ for b = 1:nfile
         algebraic_model={'CUSTOM INPUT FILE'};
     else
         %Standard Full, truncated, linear model, or no algebraic model
+<<<<<<< HEAD
         % Select the terms to be included
         % Terms are listed in following order:
         % (INTERCEPT), F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
+=======
+        %Select the terms to be included
+        % Terms are listed in following order:
+        % INTERCEPT -- not included here
+        %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, (1-12)
+        % |F*G*G|, F*G*|G|, |F*G*H|  (13-15)
+>>>>>>> allcubic
         termInclude=zeros(12,1); % again, not including intercept
         if FLAGS.model==3 %Linear eqn
             termInclude(1)=1; %Include only linear terms
@@ -312,7 +320,7 @@ for b = 1:nfile
             termInclude([1,3,5])=1;
             algebraic_model={'TRUNCATED (BALANCE TYPE 1-A)'};
         elseif FLAGS.model==1 %Full Eqn type
-            termInclude(1:12)=1;
+            termInclude(1:15)=1;
             algebraic_model={'FULL'};
         elseif FLAGS.model==0 %No Algebraic Model
             algebraic_model={'NO ALGEBRAIC MODEL'};
@@ -325,10 +333,10 @@ for b = 1:nfile
 
     %Display warning if included term is not possible with data dimensions
     if exist('termInclude','var')
-        if voltdimFlag<2 && any(termInclude([5,6,7,8,11,12]))
-            warning('Less than 2 input data dimensions. Unable to create interaction terms: F*G, |F*G|, F*|G|, |F|*G, F*G*G, F*G*H')
-        elseif voltdimFlag<3 && any(termInclude(12))
-            warning('Less than 3 input data dimensions. Unable to create interaction term: F*G*H')
+        if voltdimFlag<2 && any(termInclude([5,6,7,8,11,12,13,14]))
+            warning('Less than 2 input data dimensions. Unable to create interaction terms: F*G, |F*G|, F*|G|, |F|*G, F*G*G, F*G*H, |F*G*G|, F*G*|G|, |F*G*H|')
+        elseif voltdimFlag<3 && any(termInclude([12,15]))
+            warning('Less than 3 input data dimensions. Unable to create interaction term: F*G*H, |F*G*H|')
         end
     end
 

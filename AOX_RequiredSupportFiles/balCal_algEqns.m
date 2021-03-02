@@ -20,17 +20,18 @@ function [in_comb,high,high_CELL] = balCal_algEqns(model_FLAG,in,series,intercep
     %to be supported: Find variable in row, go accross row to find '1' in
     %columns
     %'high_CELL' includes labels, mainly for debugging purposes
+    % In comments, TERM / TERM means that the two terms are exactly equivalent. Thus, they are calculated only once.
 
     % Term order for full equation set:
     % INTERCEPT (1)
-    % F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G (2-8)
-    % F*F*F, |F*F*F|, |F|*F*F, F*|F|*F, F*F*|F F*G*G, F*|G*G|, |F|*G*G, F*G*H, |F|*G*H, F*|G*H| (9-)
+    %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, (2-13)
+    % |F*G*G|, F*G*|G|, |F*G*H|  (14-16)
 
     if nargin <6 % checks number of arguments into function to assign normFLAG. 
         normFLAG = 0; % nominally 0
     end
 
-    if normFLAG == 1
+    if normFLAG == 1 % note: this is currently non functional. normFLAG is deprecated.
         range = max(in) - min(in);
         scale = max(max(abs(in)));
         shift = min(in) + range/2;
@@ -45,15 +46,15 @@ function [in_comb,high,high_CELL] = balCal_algEqns(model_FLAG,in,series,intercep
     d = size(in_n,2); %data dimensionality.
 
     % Number of combinations for each term type
-    termNum=zeros(1,13);
+    termNum=zeros(1,16);
     termNum(1)=1;
     termNum([2,3,4,5,10,11])=d;
     if d >= 2
         termNum([6,7,8,9])=(d^2-d)/2;
-        termNum(12)=factorial(d)/factorial(d-2); % nPr
+        termNum([12,14,15])=factorial(d)/factorial(d-2); % nPr
     end
     if d >= 3
-        termNum(13)=factorial(d)/(factorial(3)*factorial(d-3)); % nCr
+        termNum([13,16])=factorial(d)/(factorial(3)*factorial(d-3)); % nCr
     end
 
     glob_intercept=ones(nPoint,1); %Global Intercept Term
@@ -132,9 +133,9 @@ function [in_comb,high,high_CELL] = balCal_algEqns(model_FLAG,in,series,intercep
 
     if d>=2
         j = 1;
-        abs_iniinj = zeros(nPoint,(d^2-d)/2); % |F*G|
-        ini_absinj = zeros(nPoint,(d^2-d)/2); % F*|G|
-        absini_inj = zeros(nPoint,(d^2-d)/2); % |F|*G
+        abs_iniinj      = zeros(nPoint,(d^2-d)/2); % |F*G|
+        ini_absinj      = zeros(nPoint,(d^2-d)/2); % F*|G|
+        absini_inj      = zeros(nPoint,(d^2-d)/2); % |F|*G
         
         abs_iniinj_high=zeros((d^2-d)/2,d); %hierarchy for absolute value cross terms
         ini_absinj_high=zeros((d^2-d)/2,2*d); %hierarchy for ini_absinj terms
@@ -159,25 +160,49 @@ function [in_comb,high,high_CELL] = balCal_algEqns(model_FLAG,in,series,intercep
     end
 
     if d>=2 % cubic terms (2 unique)
-        j=1;
-        ini_inj_inj= zeros(nPoint, factorial(d)/factorial(d-2)); % Term F*G*G
-        ini_inj_inj_high= zeros(termNum(12), sum(termNum)); %Hierarchy for Term F*G*G
+        j=1; % counting the possible terms
+        ini_inj_inj         = zeros(nPoint, factorial(d)/factorial(d-2)); % Term F*G*G
+        abs_iniinjinj       = zeros(nPoint, factorial(d)/factorial(d-2)); % |F*G*G| - order matters
+        ini_inj_absinj      = zeros(nPoint, factorial(d)/factorial(d-2)); % F*G*|G| - order matters
+
+        ini_inj_inj_high    = zeros(termNum(12), sum(termNum));     % Hierarchy for Term F*G*G
+        abs_iniinjinj_high    = zeros(termNum(14), sum(termNum));   % Hierarchy for Term |F*G*G|
+        ini_inj_absinj_high    = zeros(termNum(15), sum(termNum));  % Hierarchy for Term F*G*|G|
+
+                 
+        
         %For assembling term 'F*G*G' a slightly different approach is needed
         %because the order matters:
         % For example, if we have 3 input variables x, y, and z, we want all the
         % following combinations (6): x*y*y, x*z*z, y*x*x, y*z*z, z*x*x, z*y*y
-        for k = 1:d
-            j_ind=setdiff([1:d],k); %Indices for inner loop
+        for k = 1:d % iterate over variables
+            j_ind=setdiff([1:d],k); %Indices for inner loop (controls which variable is G)
             for m= 1:length(j_ind)
-                ini_inj_inj(:,j)=in_n(:,k).*(in_n(:,j_ind(m)).^2);
+                ini_inj_inj(:,j)= in_n(:,k).*(in_n(:,j_ind(m)).^2); % F*G*G / F*|G*G|
+                abs_iniinjinj(:,j) = abs(in_n(:,k).*(in_n(:,j_ind(m)).^2)); % |F*G*G| / |F|*G*G
+                ini_inj_absinj(:,j) = in_n(:,k).*in_n(:,j_ind(m)).*abs(in_n(:,j_ind(m))); % F*G*|G| / F*|G|*G
                 
-                ini_inj_inj_high([j,j],1+[k,j_ind(m)])=1; %Requires F and G for support
-                ini_inj_inj_high(j,sum(termNum(1:3))+j_ind(m))=1; %Requires G*G for support
+                ini_inj_inj_high(j,1+[k,j_ind(m)])=1;                   % Requires F and G for support
+                ini_inj_absinj_high(j,1+[k,j_ind(m)])=1;                % Requires F and G for support
                 
-                [ij_rowf,~]=find(ini_inj_high(:,[k,j_ind(m)])); %find indices of terms in 'F*G' (ini_inj) supported by F, G, or H.
-                [~,ia,~]=unique(ij_rowf); %Find rows that are supported by only 1 of these terms (F or G)
-                ij_rowf(ia)=[]; %Remove rows only supported by 1 term, leaving indices of terms supported by both terms (F and G)
-                ini_inj_inj_high(j,sum(termNum(1:5))+ij_rowf)=1;
+                abs_iniinjinj_high(j,d+1+[k,j_ind(m)]) = 1;             % Requires |F| and |G| for support
+                ini_inj_absinj_high(j,d+1+j_ind(m)) = 1;                % Requires |G| for support
+                
+                ini_inj_inj_high(j,sum(termNum(1:3))+j_ind(m))=1;       % Requires G*G for support (F*G*G)
+                abs_iniinjinj_high(j,sum(termNum(1:3))+j_ind(m))=1;     % Requires G*G for support (|F*G*G|)
+                
+                ini_inj_absinj_high(j,sum(termNum(1:4))+j_ind(m))=1;    % Requires F*|F| corresponding to G*|G| term for support
+                
+                [ij_rowf,~] = find(ini_inj_high(:,[k,j_ind(m)]));       % find indices of terms in 'F*G' (ini_inj) supported by F or G.
+                [aij_rowf,~] = find(abs_iniinj_high(:,[k,j_ind(m)]));   % find indices of terms in '|F*G|' (ini_inj) supported by F or G.
+                [~,ia,~]=unique(ij_rowf);                               % Find rows that are supported by only 1 of these terms (F or G)
+                [~,aia,~]=unique(aij_rowf);                             % Find rows that are supported by only 1 of these terms (F or G)
+                ij_rowf(ia)=[];                                         % Remove rows only supported by 1 term, leaving indices of terms supported by both terms (F and G)
+                aij_rowf(aia)=[];                                       % Remove rows only supported by 1 term, leaving indices of terms supported by both terms |F*G|
+                ini_inj_inj_high(j,sum(termNum(1:5))+ij_rowf)=1;        % Requires F*G for support
+                ini_inj_absinj_high(j,sum(termNum(1:5))+ij_rowf)=1;     % Requires F*G for support
+                abs_iniinjinj_high(j,sum(termNum(1:6))+aij_rowf) = 1;   % Requires |F*G| for support
+
                 j=j+1;
             end
         end
@@ -188,17 +213,29 @@ function [in_comb,high,high_CELL] = balCal_algEqns(model_FLAG,in,series,intercep
     if d>=3 % cubic terms (3 unique)
         j=1;
         ini_inj_ink= zeros(nPoint, factorial(d)/(factorial(3)*factorial(d-3))); %Term F*G*H
+        abs_iniinjink = zeros(nPoint, factorial(d)/(factorial(3)*factorial(d-3))); %Term |F*G*H|
         ini_inj_ink_high= zeros(termNum(13), sum(termNum)); %hierarchy for term F*G*H
+        abs_iniinjink_high= zeros(termNum(16), sum(termNum)); %hierarchy for term |F*G*H|
+        
         for k = 1:d-1
             for m = k+1:d
                 for n = m+1:d
-                    ini_inj_ink(:,j)=in_n(:,k).*in_n(:,m).*in_n(:,n);
+                    ini_inj_ink(:,j)= in_n(:,k).*in_n(:,m).*in_n(:,n);      % Term F*G*H
+                    abs_iniinjink(:,j) = abs(in_n(:,k).*in_n(:,m).*in_n(:,n));   % Term |F*G*H|
+
+                    ini_inj_ink_high(j,1+[k,m,n])=1; % F, G, and H hierarchy support
+                    abs_iniinjink_high([j,j,j],d+1+[k,m,n]) = 1; % |F|,|G|,|H| hierarchy support--2nd term, so add d to skip the first term ("F")
+
+                    [ij_rowf,~]=find(ini_inj_high(:,[k,m,n]));              % find indices of terms in 'F*G' (ini_inj) supported by F, G, or H.
+                    [aij_rowf,~]=find(abs_iniinj_high(:,[k,m,n]));          % find indices of terms in '|F*G|' (abs_iniinj) supported by F, G, or H.
                     
-                    [ij_rowf,~]=find(ini_inj_high(:,[k,m,n])); %find indices of terms in 'F*G' (ini_inj) supported by F, G, or H.
-                    [~,ia,~]=unique(ij_rowf); %Find rows that are supported by only 1 of these terms (F, G, or H)
-                    ij_rowf(ia)=[]; %Remove rows only supported by 1 term, leaving indices of terms supported by 2 out of 3 terms (F, G, H)
-                    ini_inj_ink_high([j,j,j],1+[k,m,n])=1; %Hierarchy requires F, G, and H for support
-                    ini_inj_ink_high([j,j,j],sum(termNum(1:5))+ij_rowf)=1;
+                    [~,ia,~]=unique(ij_rowf);       % Find rows that are supported by only 1 of these terms (F, G, or H)
+                    [~,aia,~]=unique(aij_rowf);     % Find rows that are supported by only 1 of these terms abs(F, G, or H)
+                    ij_rowf(ia)=[];         %Remove rows only supported by 1 term, leaving indices of terms supported by 2 out of 3 terms (F, G, H)
+                    aij_rowf(aia) = [];     %Remove rows only supported by 1 term, leaving indices of terms supported by 2 out of 3 terms abs(F, G, H)
+                    
+                    ni_inj_ink_high([j,j,j],sum(termNum(1:5))+ij_rowf)=1; % F*G hierarchy support
+                    abs_iniinjink_high([j,j,j],sum(termNum(1:6))+aij_rowf)=1; % |F*G| hierarchy support
                     j=j+1;
                 end
             end
@@ -223,28 +260,36 @@ function [in_comb,high,high_CELL] = balCal_algEqns(model_FLAG,in,series,intercep
         in_cu,     ...
         abs_incu, ...
         ini_inj_inj, ...
-        ini_inj_ink];
+        ini_inj_ink, ...
+        abs_iniinjinj, ...
+        ini_inj_absinj, ...
+        abs_iniinjink];
 
-    %Assemble hierarchy matrix
-    % Term order for full equation set:
-    % F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
+    % Assemble hierarchy for full equation set:
+    % INTERCEPT (1)
+    %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, (2-13)
+    % |F*G*G|, F*G*|G|, |F*G*H|  (14-16)
 
     high=zeros(size(in_comb,2));
     high((sum(termNum(1:3))+1:sum(termNum(1:4))),1+(1:d))=in_sq_high;
     high((sum(termNum(1:4))+1:sum(termNum(1:5))),1+(1:2*d))=in_absin_high;
-    if d>=2
+    if d>=2 % 2nd deg, 2 unique
         high((sum(termNum(1:5))+1:sum(termNum(1:6))),1+(1:d))=ini_inj_high;
         high((sum(termNum(1:6))+1:sum(termNum(1:7))),1+(d+1:2*d))=abs_iniinj_high;
         high((sum(termNum(1:7))+1:sum(termNum(1:8))),1+(1:2*d))=ini_absinj_high;
         high((sum(termNum(1:8))+1:sum(termNum(1:9))),1+(1:2*d))=absini_inj_high;
     end
-    high((sum(termNum(1:9))+1:sum(termNum(1:10))),1+(1:3*d))=in_cu_high;
-    high((sum(termNum(1:10))+1:sum(termNum(1:11))),1+(1:3*d))=abs_incu_high;
-    if d>=2
+    high((sum(termNum(1:9))+1:sum(termNum(1:10))),1+(1:3*d))=in_cu_high; % F*F*F
+    high((sum(termNum(1:10))+1:sum(termNum(1:11))),1+(1:3*d))=abs_incu_high; % |F*F*F|
+    if d>=2 % 3rd deg, 2 unique
         high((sum(termNum(1:11))+1:sum(termNum(1:12))),:)=ini_inj_inj_high;
+        high((sum(termNum(1:13))+1:sum(termNum(1:14))),:)=abs_iniinjinj_high;
+        high((sum(termNum(1:14))+1:sum(termNum(1:15))),:)=ini_inj_absinj_high;
+
     end
-    if d>=3
+    if d>=3 % 3rd deg, 3 unique
         high((sum(termNum(1:12))+1:sum(termNum(1:13))),:)=ini_inj_ink_high;
+        high((sum(termNum(1:15))+1:sum(termNum(1:16))),:)=abs_iniinjink_high;
     end
     high_CELL=[[{" "};term_labels],[term_labels';num2cell(high)]];
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -28,11 +28,13 @@ else
 end
 
 % Term order for full equation set:
-% (INTERCEPT), F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
+% (INTERCEPT) (1)
+%  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, (2-13)
+% |F*G*G|, F*G*|G|, |F*G*H|  (14-16)
 
 %Initialize counter and empty variables
 count5=1;
-count13=1;
+count33=1; % counts all cubic terms w/ 3 uniques
 block1=cellstr('INTERCEPT');
 block2=cell(voltdimFlag,1);
 block3=cell(voltdimFlag,1);
@@ -53,8 +55,10 @@ block10=cell(voltdimFlag,1);
 block11=cell(voltdimFlag,1);
 if voltdimFlag>=3
     block13=cell(factorial(voltdimFlag)/(factorial(3)*factorial(voltdimFlag-3)),1);
+    block16=cell(factorial(voltdimFlag)/(factorial(3)*factorial(voltdimFlag-3)),1);
 else
     block13=[];
+    block16=[];
 end
 %write text for variable names and combinations for terms 1:11, 13
 for i=1:voltdimFlag
@@ -72,8 +76,9 @@ for i=1:voltdimFlag
         count5=count5+1;
         if voltdimFlag>=3
         for k=j+1:voltdimFlag
-            block13(count13)=strcat(leftlist(i),'*',leftlist(j),'*',leftlist(k));
-            count13=count13+1;
+            block13(count33)=strcat(leftlist(i),'*',leftlist(j),'*',leftlist(k));
+            block16(count33)=strcat('|',leftlist(i),'*',leftlist(j),'*',leftlist(k),'|');
+            count33=count33+1;
         end
         end
     end
@@ -82,28 +87,34 @@ for i=1:voltdimFlag
     block11(i)=strcat('|',leftlist(i),'*',leftlist(i),'*',leftlist(i),'|');
 end
 
-%write text for variable names and combinations for term 12 (F*G*G)
+% write text for variable names and combinations for 3rd deg, 2 unique terms
 if voltdimFlag>=2
-    block12=cell(factorial(voltdimFlag)/factorial(voltdimFlag-2),1);
-    count=1;
+    block12=cell(factorial(voltdimFlag)/factorial(voltdimFlag-2),1); % F*G*G
+    block14=cell(factorial(voltdimFlag)/factorial(voltdimFlag-2),1); % |F*G*G|  
+    block15=cell(factorial(voltdimFlag)/factorial(voltdimFlag-2),1); % F*G*|G|
+    count32=1; % count cubic terms, 2 uniques
     for i=1:voltdimFlag
         j_ind=setdiff([1:voltdimFlag],i); %Indices for inner loop
         for j=1:length(j_ind)
-            block12(count)=strcat(leftlist(i),'*',leftlist(j_ind(j)),'*',leftlist(j_ind(j)));
-            count=count+1;
+            block12(count32)=strcat(leftlist(i),'*',leftlist(j_ind(j)),'*',leftlist(j_ind(j)));
+            block14(count32)=strcat('|',leftlist(i),'*',leftlist(j_ind(j)),'*',leftlist(j_ind(j)),'|');
+            block15(count32)=strcat(leftlist(i),'*',leftlist(j_ind(j)),'*','|',leftlist(j_ind(j)),'|');
+            count32=count32+1;
         end
     end
 else
     block12=[];
+    block14=[];
+    block15=[];
 end
 
 %Select Terms based on model type selected
-if model==3
+if model==3 % linear
     leftColumn =[block1;block2];
-elseif model==2
+elseif model==2 % truncated
     leftColumn=[block1;block2;block4;block6];
-else
-    leftColumn=[block1;block2;block3;block4;block5;block6;block7;block8;block9;block10;block11;block12;block13];
+else % assemble everything
+    leftColumn=[block1;block2;block3;block4;block5;block6;block7;block8;block9;block10;block11;block12;block13;block14;block15;block16];
 end
 
 if nargin>=7
