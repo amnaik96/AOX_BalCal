@@ -301,17 +301,11 @@ for b = 1:nfile
         algebraic_model={'CUSTOM INPUT FILE'};
     else
         %Standard Full, truncated, linear model, or no algebraic model
-<<<<<<< HEAD
-        % Select the terms to be included
-        % Terms are listed in following order:
-        % (INTERCEPT), F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
-=======
         %Select the terms to be included
         % Terms are listed in following order:
         % INTERCEPT -- not included here
         %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, (1-12)
         % |F*G*G|, F*G*|G|, |F*G*H|  (13-15)
->>>>>>> allcubic
         termInclude=zeros(12,1); % again, not including intercept
         if FLAGS.model==3 %Linear eqn
             termInclude(1)=1; %Include only linear terms

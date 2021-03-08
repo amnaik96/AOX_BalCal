@@ -3187,7 +3187,7 @@ function batchin_Callback(hObject, eventdata, handles)
 % hObject    handle to batchin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    if get(hObject,'Value') == 1
+    if get(hObject,'Value') == 1 % Batch mode checked
         % Initial GUI work --v1
         handles.calstring.String    = "Select Batch Input File:";
         handles.cal_l1.Visible      ='Off';
@@ -3217,6 +3217,7 @@ function batchin_Callback(hObject, eventdata, handles)
         handles.actionpanel.Visible ='Off'; % Hide entire action panel
         handles.bal_mode.Visible    ='Off';
         handles.gen_mode.Visible    ='Off';
+        handles.balanceType_list.Visible='Off';
         % experimental: mess with GUI section sizes
         handles.modelPanel.Position(4)   =0.5165;
     else
@@ -3248,6 +3249,7 @@ function batchin_Callback(hObject, eventdata, handles)
         handles.actionpanel.Visible ='On'; % Hide entire action panel
         handles.bal_mode.Visible    ='On';
         handles.gen_mode.Visible    ='On';
+        handles.balanceType_list.Visible='On';
         % experimental: mess with GUI section sizes
         handles.modelPanel.Position(4)   =0.37416777629826903; % original size
     end
