@@ -1,8 +1,8 @@
-function [calfile, valfile, apprxfile, bgmode, vmode, amode, outloc] = batchprocess(infile)
+function [infiles, bgmode, vmode, amode, outloc, alg_opt, grbf_opt] = batchprocess(infile)
     % BATCHPROCESS: BATCH INPUT FILE PROCESSING. 
     % Run at runbutton callback if batch mode enabled to send file names and desired input parameters.
     % Outputs:
-    %   inpaths: paths for each file to be analyzed, string vector
+    %   infiles: paths for each file to be analyzed, string vector
     %   bgmode: mode of balcal (balcal or general approximation), vector
     %   vmode: handles.Validate, vector
     %   amode: handle.Approximate, vector
@@ -24,13 +24,16 @@ function [calfile, valfile, apprxfile, bgmode, vmode, amode, outloc] = batchproc
 
     %% Process Input Info
     % preallocations
-    inpaths = [calfile, valfile, apprxfile];
     vmode = zeros(nfile,1);
     amode = zeros(nfile,1);
     bmode = zeros(nfile,1);
     gmode = zeros(nfile,1);
     outloc = strings(nfile,1);
+    alg_opt = struct();
+    grbf_opt = struct();
 
+    % Process input file variables
+    infiles = [calfile, valfile, apprxfile];
     if exist('output_location','var')
         outloc(:) = char(output_location);
         def_out = 1;
@@ -39,7 +42,7 @@ function [calfile, valfile, apprxfile, bgmode, vmode, amode, outloc] = batchproc
     end
 
     for i = 1:nfile
-        [caldir,~,~] = fileparts(calfile(i));
+        [caldir,~,~] = fileparts(infiles(i,1));
         if def_out == 0
             outloc(i) = char(caldir);
         end
@@ -62,6 +65,18 @@ function [calfile, valfile, apprxfile, bgmode, vmode, amode, outloc] = batchproc
             vmode(i) = 0;
             amode(i) = 1;
         end
+        % algebraic model options
+        alg_opt(i).modelTag = char(modelTag(i));
+        alg_opt(i).balance_type = balance_type(i);
+        alg_opt(i).customTerms = char(customTerms(i));
+        alg_opt(i).customFile = customFile(i);
+        % grbf model options
+        grbf_opt(i).grbf = grbf(i);
+        grbf_opt(i).basis = basis(i);
+        grbf_opt(i).selfTerm = selfTerm(i); % takes the string corresponding to the value in GUI already.
+        grbf_opt(i).min_eps = min_eps(i);
+        grbf_opt(i).max_eps = max_eps(i);
+        grbf_opt(i).thresh = rbf_vif_thresh(i);
     end
 
 

@@ -153,15 +153,18 @@ set(hObject,'Enable','off','String','...')
 uiresume(handles.figure1);
 if handles.batchin.Value==1
     outStruct.batch=1;
-    [calfile, valfile, apprxfile, bgmode, vmode, amode, outloc] = batchprocess(get(handles.calPath,'String')); % brings the string array of file paths into workspace
+    [infiles, bgmode, vmode, amode, outloc, alg_opt, grbf_opt] = batchprocess(get(handles.calPath,'String')); % brings the string array of file paths into workspace
+    numfiles = size(infiles,1);
 else
     outStruct.batch=0;
+    infiles = 0;
     calfile = 0; % set placeholder value for calfile so the batch loop behaves like non-batch
     valfile = 0; % set placeholder value for valfile so the batch loop behaves like non-batch
-    apprxfile = 0; % set placeholder value for apprxfile so the batch loop behaves like non-batch
+    apxfile = 0; % set placeholder value for apprxfile so the batch loop behaves like non-batch
+    numfiles = 1; % running 1 file only
 end
 
-for b = 1:length(calfile)
+for b = 1:numfiles
     %% Individual Handle Assignments if in batch mode
     outStruct(b).batch = outStruct(1).batch; % indicate batch run
     if outStruct(b).batch == 1
@@ -169,15 +172,27 @@ for b = 1:length(calfile)
         handles.bal_mode.Value = bgmode(b,1);
         handles.gen_mode.Value = bgmode(b,2);
         % Calibration
-        handles.calPath.String = calfile(b);
+        handles.calPath.String = infiles(b,1);
         % Validation
         handles.validate.Value = vmode(b);
-        handles.valPath.String = valfile(b);
+        handles.valPath.String = infiles(b,2);
         % Approximation
         handles.approximate.Value = amode(b);
-        handles.appPath.String = apprxfile(b);
+        handles.appPath.String = infiles(b,3);
         % Output Location
         handles.output_location.String = outloc(b);
+        % Algebraic Model Options
+        handles.modelPanel.SelectedObject.Tag = alg_opt(b).modelTag;  
+        % handles.balanceType_list.Value = alg_opt(b).balance_type; 
+        handles.termSelectButton.Tooltip =alg_opt(b).customTerms;
+        handles.customPath.String = alg_opt(b).customFile;
+        % GRBF Model Options
+        handles.grbf.Value = grbf_opt(b).grbf;
+        handles.numBasisIn.String = num2str(grbf_opt(b).basis);
+        handles.selfTerm_pop.Value = grbf_opt(b).selfTerm;
+        handles.min_eps.String = num2str(grbf_opt(b).min_eps);
+        handles.max_eps.String = num2str(grbf_opt(b).max_eps);
+        handles.RBF_VIF_thresh.String = num2str(grbf_opt(b).thresh);
     end
 
     if handles.bal_mode.Value==1
@@ -186,9 +201,10 @@ for b = 1:length(calfile)
         outStruct(b).mode=2; %General Function Approximation
     end
     if outStruct(b).batch == 1
-        [caldir,~,~] = fileparts(calfile(b)); % results for each file write to the location of the original file
+        [caldir,~,~] = fileparts(infiles(b,1)); % results for each file write to the location of the original file
     end
-    
+
+    % Plot options
     %outStruct(b).tares = get(handles.tares_FLAGcheck,'Value');
     outStruct(b).disp = get(handles.disp_FLAGcheck,'Value');
     %outStruct(b).grbftares = get(handles.grbftares_FLAGcheck,'Value');
@@ -205,6 +221,7 @@ for b = 1:length(calfile)
     outStruct(b).rescorr = get(handles.rescorr_FLAGcheck,'Value');
     outStruct(b).excel = get(handles.excel_FLAGcheck,'Value');
 
+    % Algebraic Model Options assignment
     termList={' F, ',' |F|, ', ' F*F, ', ' F*|F|, ', ' F*G, ', ' |F*G|, ', ' F*|G|, ', ' |F|*G, ', ' F*F*F, ', ' |F*F*F|, ',' F*G*G, ',' F*G*H '};
     customPath = '';
     switch get(get(handles.modelPanel,'SelectedObject'),'Tag')
@@ -217,7 +234,11 @@ for b = 1:length(calfile)
             outStruct(b).customMatrix = logical(csvread(customPath,1,1));
         case 'balanceType'
             outStruct(b).model=5;
-            outStruct(b).balanceEqn=get(handles.balanceType_list,'Value');
+            if outStruct(b).batch == 1 % popupMenu does not like overwriting handles
+                outStruct(b).balanceEqn = alg_opt(b).balance_type;
+            else
+                outStruct(b).balanceEqn=get(handles.balanceType_list,'Value');
+            end
         case 'termSelect'
             outStruct(b).model=6;
             outStruct(b).termInclude=zeros(10,1);
@@ -241,6 +262,7 @@ for b = 1:length(calfile)
             outStruct(b).model=0;
     end
 
+    % GRBF options assignment
     outStruct(b).grbf = 1 + get(handles.grbf,'Value');
     outStruct(b).basis = str2num(get(handles.numBasisIn,'String'));
     outStruct(b).selfTerm_str=handles.selfTerm_pop.String(handles.selfTerm_pop.Value);
@@ -298,7 +320,7 @@ for b = 1:length(calfile)
         end
     end
 
-
+    % Collect data from input files
     cal.type = 'calibrate';
     cal.Path = char(get(handles.calPath,'String'));
     if outStruct(b).batch == 1
@@ -3217,8 +3239,12 @@ function batchin_Callback(hObject, eventdata, handles)
         handles.actionpanel.Visible ='Off'; % Hide entire action panel
         handles.bal_mode.Visible    ='Off';
         handles.gen_mode.Visible    ='Off';
+        handles.modelPanel.Visible  ='Off';
+        handles.grbfpanel.Visible   ='Off';
         % experimental: mess with GUI section sizes
-        handles.modelPanel.Position(4)   =0.5165;
+        handles.calcsv.Position(1) = 0.0017513134851138354;
+        handles.calcsv.Position(3) = 0.24518388791593695+(0.24956217162872155-0.0017513134851138354);
+        handles.calcsv.TitlePosition = 'centertop';
     else
         handles.calstring.String    = "Calibration Data:";
         handles.cal_l1.Visible      ='On';
@@ -3248,7 +3274,11 @@ function batchin_Callback(hObject, eventdata, handles)
         handles.actionpanel.Visible ='On'; % Hide entire action panel
         handles.bal_mode.Visible    ='On';
         handles.gen_mode.Visible    ='On';
+        handles.modelPanel.Visible  ='On';
+        handles.grbfpanel.Visible   ='On';
         % experimental: mess with GUI section sizes
-        handles.modelPanel.Position(4)   =0.37416777629826903; % original size
+        handles.calcsv.Position(1) = 0.24956217162872155; % default x position
+        handles.calcsv.Position(3) = 0.24518388791593695; % default width
+        handles.calcsv.TitlePosition = 'lefttop';
     end
 % Hint: get(hObject,'Value') returns toggle state of batchin
