@@ -3231,7 +3231,9 @@ function batchin_Callback(hObject, eventdata, handles)
         handles.validate.Visible    ='Off';
         handles.approximate.Visible ='Off';
         handles.batchinfo.Visible   ='On';
-        handles.csvr.String         ="CSV Data Ranges will be automatically calculated. Ensure .csv data files are formatted properly.";
+        batch_info1 = 'CSV Data Ranges will be automatically calculated. Ensure .csv data files are formatted properly.';
+        batch_info2 = 'All visible options will be applied to ALL batch files. See batch_example.m for more information on which program options are controllable per file.';
+        handles.csvr.String         = sprintf([batch_info1,'\n','\n',batch_info2]);     
         % Extra GUI refinement --v2
         handles.calcsv.Title        ='Batch Input';
         handles.valcsv.Visible      ='Off'; % Hide entire validation panel
