@@ -42,12 +42,43 @@ apprxfile = ["";""];
 % output_location = pwd;     % output_location defines ONE place for the location of all output files. Can be omitted--default = outputs saved in same location as calfiles
 
 %% Algebraic Model Options
+<<<<<<< HEAD
 modelTag = 'full';          % Analogous to the tags in the GUI--options are:
                                 % 'full'
                                 % 'truncated'
                                 % 'custom'
                                 % 'balanceType'
                                 % 'termSelect'
+=======
+modelTag = ["full","full"];     % Analogous to the tags in the GUI--options are:
+                                    % 'full'
+                                    % 'truncated'
+                                    % 'custom'
+                                    % 'balanceType'
+                                    % 'termSelect'
+                                    % 'noAlg'
+                                    % NOTE: must be a STRING array, NOT a char array (use " "). Vertical or horizontal does not matter.
+% If type is 'balanceType', "balance_type" controls 
+balance_type =  [0,8];          % Balance types corresponding to value:
+                                % 1: Type 1-A (F, F*F, F*G)
+                                % 2: Type 1-B (F, F*F, F*G, F*F*F)
+                                % 3: Type 1-C (F, F*G)
+                                % 4: Type 1-D (F, F*F)
+                                % 5: Type 2-A (F, |F|, F*F, F*G)
+                                % 6: Type 2-B (F, |F|, F*F, F*|F|, F*G)
+                                % 7: Type 2-C (F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G)
+                                % 8: Type 2-D (F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|)
+                                % 9: Type 2-E (F, |F|, F*|F|, F*G)
+                                % 10:Type 2-F (F, |F|, F*G)
+                                % 0: Placeholder value. "balance_type" must ALWAYS be an array of proper size (as described in instructions) with some value; if modelTag is NOT 'balancetype', it will simply be ignored.
+% If type is 'termSelect', there must be a string in "customTerms".
+%  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, |F*G*G|, F*G*|G|, |F*G*H| 
+% Format of each file's entry of customTerms is a string with the terms desired (above) connected by a comma and space.
+% As for balance_type, it is ignored if modelTag is not 'termSelect', but must have some placeholder value of proper size. Again, must be a STRING array.
+customTerms = ["F,  |F|,  F*|G|,  |F|*G, ","F*|F|, F*G, |F*G|, "];
+% If type is 'custom', then customFile must be a string with the file location of custom equation file.
+customFile = ["Directory for custom eqn file","placeholder"];              
+>>>>>>> batchin4
 
 
 %% GRBF Options
@@ -60,4 +91,8 @@ selfTerm = 4*ones(nfile);   % Self-termination options:
                                 % 4: VIF + Prediction Interval Termination (recommended/default)
 min_eps = 0.07*ones(nfile); % default: 0.07
 max_eps = 1.0*ones(nfile);  % default: 1.0
+<<<<<<< HEAD
 rbf_vif_thresh = 10;        % default: 10
+=======
+rbf_vif_thresh = 10*ones(nfile);        % default: 10
+>>>>>>> batchin4

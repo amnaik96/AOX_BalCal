@@ -256,8 +256,10 @@ for b = 1:nfile
         %Build bustom equation matrix based on the balance type selected
         balanceType=out(b).balanceEqn;
         %Select the terms to be included
-        %Terms are listed in following order
-        %(INTERCEPT), F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
+        % Terms are listed in following order:
+        % INTERCEPT -- not included here
+        %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, (1-12)
+        % |F*G*G|, F*G*|G|, |F*G*H|  (13-15)
         termInclude=zeros(12,1); %Tracker for terms to be included, not including intercept
         if balanceType==1
             termInclude([1,3,5])=1;
