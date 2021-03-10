@@ -89,6 +89,13 @@ loadSettings(handles, fileName, eventdata);
 
 uiwait(handles.figure1);
 
+% --- Executes on button press in pushbutton20.
+function pushbutton20_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton20 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+fprintf("Debug is on");
+% put debug symbol on line above to debug the default state of AOX_GUI
 
 % --- Outputs from this function are returned to the command line.
 function varargout = AOX_GUI_OutputFcn(hObject, eventdata, handles)
@@ -169,23 +176,23 @@ for b = 1:numfiles
     outStruct(b).batch = outStruct(1).batch; % indicate batch run
     if outStruct(b).batch == 1
         % Program Mode
-        handles.bal_mode.Value = bgmode(b,1);
-        handles.gen_mode.Value = bgmode(b,2);
+        handles.bal_mode.Value = bgmode(b,1); % balcal mode selection
+        handles.gen_mode.Value = bgmode(b,2); % general approx mode selection
         % Calibration
-        handles.calPath.String = infiles(b,1);
+        handles.calPath.String = infiles(b,1); % calibration file
         % Validation
-        handles.validate.Value = vmode(b);
-        handles.valPath.String = infiles(b,2);
+        handles.validate.Value = vmode(b); % toggle validation mode
+        handles.valPath.String = infiles(b,2); % validation file
         % Approximation
-        handles.approximate.Value = amode(b);
-        handles.appPath.String = infiles(b,3);
+        handles.approximate.Value = amode(b); % toggle approx mode
+        handles.appPath.String = infiles(b,3); % approx file
         % Output Location
-        handles.output_location.String = outloc(b);
+        handles.output_location.String = outloc(b); % results output location override
         % Algebraic Model Options
-        handles.modelPanel.SelectedObject.Tag = alg_opt(b).modelTag;  
-        % handles.balanceType_list.Value = alg_opt(b).balance_type; 
-        handles.termSelectButton.Tooltip =alg_opt(b).customTerms;
-        handles.customPath.String = alg_opt(b).customFile;
+        handles.modelPanel.SelectedObject.Tag = alg_opt(b).modelTag; % alg model mode
+        handles.termSelectButton.Tooltip = alg_opt(b).customTerms; % custom term selection
+        handles.customPath.String = alg_opt(b).customFile; % custom algebraic model file
+        % balance type is assigned separately due to problems with overwriting popupMenu handles
         % GRBF Model Options
         handles.grbf.Value = grbf_opt(b).grbf;
         handles.numBasisIn.String = num2str(grbf_opt(b).basis);
@@ -222,7 +229,7 @@ for b = 1:numfiles
     outStruct(b).excel = get(handles.excel_FLAGcheck,'Value');
 
     % Algebraic Model Options assignment
-    termList={' F, ',' |F|, ', ' F*F, ', ' F*|F|, ', ' F*G, ', ' |F*G|, ', ' F*|G|, ', ' |F|*G, ', ' F*F*F, ', ' |F*F*F|, ',' F*G*G, ',' F*G*H '};
+    termList={' F, ',' |F|, ', ' F*F, ', ' F*|F|, ', ' F*G, ', ' |F*G|, ', ' F*|G|, ', ' |F|*G, ', ' F*F*F, ', ' |F*F*F|, ',' F*G*G, ',' F*G*H ',' |F*G*G|, ',' F*G*|G|, ',' |F*G*H|, '};
     customPath = '';
     switch get(get(handles.modelPanel,'SelectedObject'),'Tag')
         case 'full', outStruct(b).model = 1;
@@ -241,11 +248,12 @@ for b = 1:numfiles
             end
         case 'termSelect'
             outStruct(b).model=6;
-            outStruct(b).termInclude=zeros(10,1);
+            outStruct(b).termInclude=zeros(15,1);
             terms=handles.termSelectButton.Tooltip;
             %Terms are listed in following order:
-            %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
-
+            % INTERCEPT -- not included here
+            %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, (1-12)
+            % |F*G*G|, F*G*|G|, |F*G*H|  (13-15)
             outStruct(b).termInclude(1)=contains(terms,termList{1});
             outStruct(b).termInclude(2)=contains(terms,termList{2});
             outStruct(b).termInclude(3)=contains(terms,termList{3});
@@ -258,6 +266,9 @@ for b = 1:numfiles
             outStruct(b).termInclude(10)=contains(terms,termList{10});
             outStruct(b).termInclude(11)=contains(terms,termList{11});
             outStruct(b).termInclude(12)=contains(terms,termList{12});
+            outStruct(b).termInclude(13)=contains(terms,termList{13});                    
+            outStruct(b).termInclude(14)=contains(terms,termList{14});                
+            outStruct(b).termInclude(15)=contains(terms,termList{15});                
         case 'noAlg'
             outStruct(b).model=0;
     end
@@ -3184,13 +3195,6 @@ function autoval_Callback(hObject, eventdata, handles)
     acsv_set(ranges,autofill_type,hObject,eventdata,handles); % add range data to GUI boxes
 
 
-% --- Executes on button press in pushbutton20.
-function pushbutton20_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton20 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-fprintf("Debug is on");
-% put debug symbol on line above to debug the default state of AOX_GUI
 
 
 % --- Executes on button press in autoapp.

@@ -46,7 +46,7 @@ function [infiles, bgmode, vmode, amode, outloc, alg_opt, grbf_opt] = batchproce
         if def_out == 0
             outloc(i) = char(caldir);
         end
-        % bcmode directly controls balcal or gen approx mode
+        % bcmode directly controls balcal or gen approx mode (pick one or the other)
         switch pmode(i)
         case 1
             bmode(i) = 1;

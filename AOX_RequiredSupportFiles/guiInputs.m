@@ -61,14 +61,20 @@ fprintf(fileID,'\n');
              fprintf(fileID,'BALANCE TYPE 2-E(F,|F|,F*|F|,F*G)\n');
          elseif outStruct.balanceEqn==10
              fprintf(fileID,'BALANCE TYPE 2-F(F,|F|,F*G)\n');
-         elseif outStruct.balanceEqn==11
-             fprintf(fileID,'BALANCE TYPE 3-A(F*F*F,|F*F*F|,F*G*G,F*G*H)\n');
          end
     elseif outStruct.model==6
         fprintf(fileID,'\tCustom Term Selection: ');
-        for i =1:12
+        for i =1:length(termList)
             if outStruct.termInclude(i)==1
-                fprintf(fileID,termList(i));
+                iterm = char(termList(i));
+                c = strfind(iterm,',');
+                iterm = iterm(1:(c-1));
+                if i==length(termList)
+                    print_iterm = string(iterm);
+                else
+                    print_iterm = string(iterm) + ",";
+                end
+                fprintf(fileID,print_iterm);
             end
         end
         fprintf(fileID,'\n');

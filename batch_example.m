@@ -40,16 +40,13 @@ valfile = pwd + valfile;
 apprxfile = ["";""];
 
 % output_location = pwd;     % output_location defines ONE place for the location of all output files. Can be omitted--default = outputs saved in same location as calfiles
-
 %% Algebraic Model Options
-<<<<<<< HEAD
 modelTag = 'full';          % Analogous to the tags in the GUI--options are:
                                 % 'full'
                                 % 'truncated'
                                 % 'custom'
                                 % 'balanceType'
                                 % 'termSelect'
-=======
 modelTag = ["full","full"];     % Analogous to the tags in the GUI--options are:
                                     % 'full'
                                     % 'truncated'
@@ -77,10 +74,7 @@ balance_type =  [0,8];          % Balance types corresponding to value:
 % As for balance_type, it is ignored if modelTag is not 'termSelect', but must have some placeholder value of proper size. Again, must be a STRING array.
 customTerms = ["F,  |F|,  F*|G|,  |F|*G, ","F*|F|, F*G, |F*G|, "];
 % If type is 'custom', then customFile must be a string with the file location of custom equation file.
-customFile = ["Directory for custom eqn file","placeholder"];              
->>>>>>> batchin4
-
-
+customFile = ["Directory for custom eqn file","placeholder"];             
 %% GRBF Options
 grbf = ones(nfile);         % GRBF Mode on (1) or off (0)
 basis = 10*ones(nfile);     % Number of basis functions
@@ -91,8 +85,5 @@ selfTerm = 4*ones(nfile);   % Self-termination options:
                                 % 4: VIF + Prediction Interval Termination (recommended/default)
 min_eps = 0.07*ones(nfile); % default: 0.07
 max_eps = 1.0*ones(nfile);  % default: 1.0
-<<<<<<< HEAD
-rbf_vif_thresh = 10;        % default: 10
-=======
 rbf_vif_thresh = 10*ones(nfile);        % default: 10
->>>>>>> batchin4
+
