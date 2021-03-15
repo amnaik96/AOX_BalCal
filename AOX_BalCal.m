@@ -51,7 +51,10 @@ tic;
 nfile = length(out);
 
 for b = 1:nfile
-    diary consoleoutput.txt
+    REPORT_NO=out(b).REPORT_NO;
+    diary off;
+    consoleoutput_name = ['console_output',REPORT_NO,'.txt'];
+    diary(consoleoutput_name)
 
 %% ASSIGN USER INPUT PARAMETERS
     FLAGS.mode=out(b).mode; %mode==1 for Balance Calibration, mode==2 for general approximation
@@ -186,7 +189,7 @@ for b = 1:nfile
         end
     end
 
-    REPORT_NO=out(b).REPORT_NO;
+    
     file_output_location=out(b).output_location;
 
     %TO SAVE .MAT FILE OF CALIBRATION MODEL
@@ -256,10 +259,8 @@ for b = 1:nfile
         %Build bustom equation matrix based on the balance type selected
         balanceType=out(b).balanceEqn;
         %Select the terms to be included
-        % Terms are listed in following order:
-        % INTERCEPT -- not included here
-        %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, (1-12)
-        % |F*G*G|, F*G*|G|, |F*G*H|  (13-15)
+        %Terms are listed in following order
+        %(INTERCEPT), F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
         termInclude=zeros(12,1); %Tracker for terms to be included, not including intercept
         if balanceType==1
             termInclude([1,3,5])=1;
@@ -303,11 +304,17 @@ for b = 1:nfile
         algebraic_model={'CUSTOM INPUT FILE'};
     else
         %Standard Full, truncated, linear model, or no algebraic model
+
+        % Select the terms to be included
+        % Terms are listed in following order:
+        % (INTERCEPT), F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
+
         %Select the terms to be included
         % Terms are listed in following order:
         % INTERCEPT -- not included here
         %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, (1-12)
         % |F*G*G|, F*G*|G|, |F*G*H|  (13-15)
+
         termInclude=zeros(12,1); % again, not including intercept
         if FLAGS.model==3 %Linear eqn
             termInclude(1)=1; %Include only linear terms
@@ -1560,16 +1567,18 @@ for b = 1:nfile
     % console output
     format compact
     diary off
-    texttemp = regexprep(fileread('consoleoutput.txt'), '<.*?>', '');
+    texttemp = regexprep(fileread(consoleoutput_name), '<.*?>', '');
     texttemp = regexprep(texttemp, 'style="font-weight:bold"', '');
     texttemp(double(texttemp)==8)='';
     %texttemp= insertAfter(texttemp,'/','/');
     %texttemp = insertAfter(texttemp,'\','\');
     texttemp = regexprep(texttemp, '\', '/');
-    fileID = fopen('consoleoutput.txt', 'w');
+    fileID = fopen(consoleoutput_name, 'w');
     fprintf(fileID, texttemp);
     fclose(fileID);
-    movefile('consoleoutput.txt', strcat(file_output_location,'consoleoutput.txt'))
+    if ~strcmp(file_output_location(1:end-1),pwd)
+        movefile(consoleoutput_name, strcat(file_output_location,consoleoutput_name))
+    end
     
     % clear some of the output data to avoid problems with batch mode--not sure this is necessary. Need to test.
     % if FLAGS.batch == 1
