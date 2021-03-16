@@ -61,20 +61,14 @@ fprintf(fileID,'\n');
              fprintf(fileID,'BALANCE TYPE 2-E(F,|F|,F*|F|,F*G)\n');
          elseif outStruct.balanceEqn==10
              fprintf(fileID,'BALANCE TYPE 2-F(F,|F|,F*G)\n');
+         elseif outStruct.balanceEqn==11
+             fprintf(fileID,'BALANCE TYPE 3-A(F*F*F,|F*F*F|,F*G*G,F*G*H)\n');
          end
     elseif outStruct.model==6
         fprintf(fileID,'\tCustom Term Selection: ');
-        for i =1:length(termList)
+        for i =1:12
             if outStruct.termInclude(i)==1
-                iterm = char(termList(i));
-                c = strfind(iterm,',');
-                iterm = iterm(1:(c-1));
-                if i==length(termList)
-                    print_iterm = string(iterm);
-                else
-                    print_iterm = string(iterm) + ",";
-                end
-                fprintf(fileID,print_iterm);
+                fprintf(fileID,termList(i));
             end
         end
         fprintf(fileID,'\n');
@@ -258,10 +252,13 @@ fprintf(fileID,'\n');
                     fprintf(fileID,'\tTerm Hierarchy Enforced During Search\n');
                 end
                 if strcmp(outStruct.AlgModelName_opt,'Forward Selection Recommended Math Model')|strcmp(outStruct.AlgModelName_opt,'Backwards Elimination Recommended Math Model')
-                    if ~isEmpty(outStruct.search_metric)
-                        fprintf(fileID,'\tOptimization Metric: ');
-                        fprintf(fileID,outStruct.search_metric);
-                        fprintf(fileID,'\n');
+                    fprintf(fileID,'\tOptimization Metric: ');
+                    if outStruct.search_metric==1
+                        fprintf(fileID,'PRESS Residual\n');
+                    elseif outStruct.search_metric==2
+                        fprintf(fileID,'Sqrt of Residual Mean Square\n');
+                    else
+                        fprintf(fileID,'Model F-Value\n');
                     end
                 end
             end
