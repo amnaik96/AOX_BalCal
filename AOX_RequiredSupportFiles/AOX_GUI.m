@@ -89,13 +89,6 @@ loadSettings(handles, fileName, eventdata);
 
 uiwait(handles.figure1);
 
-% --- Executes on button press in pushbutton20.
-function pushbutton20_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton20 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-fprintf("Debug is on");
-% put debug symbol on line above to debug the default state of AOX_GUI
 
 % --- Outputs from this function are returned to the command line.
 function varargout = AOX_GUI_OutputFcn(hObject, eventdata, handles)
@@ -160,46 +153,31 @@ set(hObject,'Enable','off','String','...')
 uiresume(handles.figure1);
 if handles.batchin.Value==1
     outStruct.batch=1;
-    [infiles, bgmode, vmode, amode, outloc, alg_opt, grbf_opt] = batchprocess(get(handles.calPath,'String')); % brings the string array of file paths into workspace
-    numfiles = size(infiles,1);
+    [calfile, valfile, apprxfile, bgmode, vmode, amode, outloc] = batchprocess(get(handles.calPath,'String')); % brings the string array of file paths into workspace
 else
     outStruct.batch=0;
-    infiles = 0;
     calfile = 0; % set placeholder value for calfile so the batch loop behaves like non-batch
     valfile = 0; % set placeholder value for valfile so the batch loop behaves like non-batch
-    apxfile = 0; % set placeholder value for apprxfile so the batch loop behaves like non-batch
-    numfiles = 1; % running 1 file only
+    apprxfile = 0; % set placeholder value for apprxfile so the batch loop behaves like non-batch
 end
 
-for b = 1:numfiles
+for b = 1:length(calfile)
     %% Individual Handle Assignments if in batch mode
     outStruct(b).batch = outStruct(1).batch; % indicate batch run
     if outStruct(b).batch == 1
         % Program Mode
-        handles.bal_mode.Value = bgmode(b,1); % balcal mode selection
-        handles.gen_mode.Value = bgmode(b,2); % general approx mode selection
+        handles.bal_mode.Value = bgmode(b,1);
+        handles.gen_mode.Value = bgmode(b,2);
         % Calibration
-        handles.calPath.String = infiles(b,1); % calibration file
+        handles.calPath.String = calfile(b);
         % Validation
-        handles.validate.Value = vmode(b); % toggle validation mode
-        handles.valPath.String = infiles(b,2); % validation file
+        handles.validate.Value = vmode(b);
+        handles.valPath.String = valfile(b);
         % Approximation
-        handles.approximate.Value = amode(b); % toggle approx mode
-        handles.appPath.String = infiles(b,3); % approx file
+        handles.approximate.Value = amode(b);
+        handles.appPath.String = apprxfile(b);
         % Output Location
-        handles.output_location.String = outloc(b); % results output location override
-        % Algebraic Model Options
-        handles.modelPanel.SelectedObject.Tag = alg_opt(b).modelTag; % alg model mode
-        handles.termSelectButton.Tooltip = alg_opt(b).customTerms; % custom term selection
-        handles.customPath.String = alg_opt(b).customFile; % custom algebraic model file
-        % balance type is assigned separately due to problems with overwriting popupMenu handles
-        % GRBF Model Options
-        handles.grbf.Value = grbf_opt(b).grbf;
-        handles.numBasisIn.String = num2str(grbf_opt(b).basis);
-        handles.selfTerm_pop.Value = grbf_opt(b).selfTerm;
-        handles.min_eps.String = num2str(grbf_opt(b).min_eps);
-        handles.max_eps.String = num2str(grbf_opt(b).max_eps);
-        handles.RBF_VIF_thresh.String = num2str(grbf_opt(b).thresh);
+        handles.output_location.String = outloc(b);
     end
 
     if handles.bal_mode.Value==1
@@ -208,10 +186,9 @@ for b = 1:numfiles
         outStruct(b).mode=2; %General Function Approximation
     end
     if outStruct(b).batch == 1
-        [caldir,~,~] = fileparts(infiles(b,1)); % results for each file write to the location of the original file
+        [caldir,~,~] = fileparts(calfile(b)); % results for each file write to the location of the original file
     end
-
-    % Plot options
+    
     %outStruct(b).tares = get(handles.tares_FLAGcheck,'Value');
     outStruct(b).disp = get(handles.disp_FLAGcheck,'Value');
     %outStruct(b).grbftares = get(handles.grbftares_FLAGcheck,'Value');
@@ -228,8 +205,7 @@ for b = 1:numfiles
     outStruct(b).rescorr = get(handles.rescorr_FLAGcheck,'Value');
     outStruct(b).excel = get(handles.excel_FLAGcheck,'Value');
 
-    % Algebraic Model Options assignment
-    termList={' F, ',' |F|, ', ' F*F, ', ' F*|F|, ', ' F*G, ', ' |F*G|, ', ' F*|G|, ', ' |F|*G, ', ' F*F*F, ', ' |F*F*F|, ',' F*G*G, ',' F*G*H ',' |F*G*G|, ',' F*G*|G|, ',' |F*G*H|, '};
+    termList={' F, ',' |F|, ', ' F*F, ', ' F*|F|, ', ' F*G, ', ' |F*G|, ', ' F*|G|, ', ' |F|*G, ', ' F*F*F, ', ' |F*F*F|, ',' F*G*G, ',' F*G*H '};
     customPath = '';
     switch get(get(handles.modelPanel,'SelectedObject'),'Tag')
         case 'full', outStruct(b).model = 1;
@@ -238,22 +214,22 @@ for b = 1:numfiles
         case 'custom'
             outStruct(b).model = 4;
             customPath = get(handles.customPath,'String');
+            if ~isfile(customPath)
+               error("Please provide valid path to custom equation") 
+            end
             outStruct(b).customMatrix = logical(csvread(customPath,1,1));
+            
+            
         case 'balanceType'
             outStruct(b).model=5;
-            if outStruct(b).batch == 1 % popupMenu does not like overwriting handles
-                outStruct(b).balanceEqn = alg_opt(b).balance_type;
-            else
-                outStruct(b).balanceEqn=get(handles.balanceType_list,'Value');
-            end
+            outStruct(b).balanceEqn=get(handles.balanceType_list,'Value');
         case 'termSelect'
             outStruct(b).model=6;
-            outStruct(b).termInclude=zeros(15,1);
+            outStruct(b).termInclude=zeros(10,1);
             terms=handles.termSelectButton.Tooltip;
             %Terms are listed in following order:
-            % INTERCEPT -- not included here
-            %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H, (1-12)
-            % |F*G*G|, F*G*|G|, |F*G*H|  (13-15)
+            %  F, |F|, F*F, F*|F|, F*G, |F*G|, F*|G|, |F|*G, F*F*F, |F*F*F|, F*G*G, F*G*H
+
             outStruct(b).termInclude(1)=contains(terms,termList{1});
             outStruct(b).termInclude(2)=contains(terms,termList{2});
             outStruct(b).termInclude(3)=contains(terms,termList{3});
@@ -266,14 +242,10 @@ for b = 1:numfiles
             outStruct(b).termInclude(10)=contains(terms,termList{10});
             outStruct(b).termInclude(11)=contains(terms,termList{11});
             outStruct(b).termInclude(12)=contains(terms,termList{12});
-            outStruct(b).termInclude(13)=contains(terms,termList{13});                    
-            outStruct(b).termInclude(14)=contains(terms,termList{14});                
-            outStruct(b).termInclude(15)=contains(terms,termList{15});                
         case 'noAlg'
             outStruct(b).model=0;
     end
 
-    % GRBF options assignment
     outStruct(b).grbf = 1 + get(handles.grbf,'Value');
     outStruct(b).basis = str2num(get(handles.numBasisIn,'String'));
     outStruct(b).selfTerm_str=handles.selfTerm_pop.String(handles.selfTerm_pop.Value);
@@ -331,7 +303,7 @@ for b = 1:numfiles
         end
     end
 
-    % Collect data from input files
+
     cal.type = 'calibrate';
     cal.Path = char(get(handles.calPath,'String'));
     if outStruct(b).batch == 1
@@ -3195,6 +3167,13 @@ function autoval_Callback(hObject, eventdata, handles)
     acsv_set(ranges,autofill_type,hObject,eventdata,handles); % add range data to GUI boxes
 
 
+% --- Executes on button press in pushbutton20.
+function pushbutton20_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton20 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+fprintf("Debug is on");
+% put debug symbol on line above to debug the default state of AOX_GUI
 
 
 % --- Executes on button press in autoapp.
@@ -3213,7 +3192,7 @@ function batchin_Callback(hObject, eventdata, handles)
 % hObject    handle to batchin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    if get(hObject,'Value') == 1 % Batch mode checked
+    if get(hObject,'Value') == 1
         % Initial GUI work --v1
         handles.calstring.String    = "Select Batch Input File:";
         handles.cal_l1.Visible      ='Off';
@@ -3235,9 +3214,7 @@ function batchin_Callback(hObject, eventdata, handles)
         handles.validate.Visible    ='Off';
         handles.approximate.Visible ='Off';
         handles.batchinfo.Visible   ='On';
-        batch_info1 = 'CSV Data Ranges will be automatically calculated. Ensure .csv data files are formatted properly.';
-        batch_info2 = 'All visible options will be applied to ALL batch files. See batch_example.m for more information on which program options are controllable per file.';
-        handles.csvr.String         = sprintf([batch_info1,'\n','\n',batch_info2]);     
+        handles.csvr.String         ="CSV Data Ranges will be automatically calculated. Ensure .csv data files are formatted properly.";
         % Extra GUI refinement --v2
         handles.calcsv.Title        ='Batch Input';
         handles.valcsv.Visible      ='Off'; % Hide entire validation panel
@@ -3245,12 +3222,8 @@ function batchin_Callback(hObject, eventdata, handles)
         handles.actionpanel.Visible ='Off'; % Hide entire action panel
         handles.bal_mode.Visible    ='Off';
         handles.gen_mode.Visible    ='Off';
-        handles.modelPanel.Visible  ='Off';
-        handles.grbfpanel.Visible   ='Off';
         % experimental: mess with GUI section sizes
-        handles.calcsv.Position(1) = 0.0017513134851138354;
-        handles.calcsv.Position(3) = 0.24518388791593695+(0.24956217162872155-0.0017513134851138354);
-        handles.calcsv.TitlePosition = 'centertop';
+        handles.modelPanel.Position(4)   =0.5165;
     else
         handles.calstring.String    = "Calibration Data:";
         handles.cal_l1.Visible      ='On';
@@ -3280,11 +3253,7 @@ function batchin_Callback(hObject, eventdata, handles)
         handles.actionpanel.Visible ='On'; % Hide entire action panel
         handles.bal_mode.Visible    ='On';
         handles.gen_mode.Visible    ='On';
-        handles.modelPanel.Visible  ='On';
-        handles.grbfpanel.Visible   ='On';
         % experimental: mess with GUI section sizes
-        handles.calcsv.Position(1) = 0.24956217162872155; % default x position
-        handles.calcsv.Position(3) = 0.24518388791593695; % default width
-        handles.calcsv.TitlePosition = 'lefttop';
+        handles.modelPanel.Position(4)   =0.37416777629826903; % original size
     end
 % Hint: get(hObject,'Value') returns toggle state of batchin

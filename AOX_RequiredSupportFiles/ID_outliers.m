@@ -43,7 +43,7 @@ if FLAGS.print == 1
     fprintf(' \n***** \n');
     fprintf('Number of Outliers =');
     fprintf(string(num_outliers));
-    fprintf('\n%s','Outliers % of Data =');
+    fprintf('\n%s','Outliers Percent of Data =');
     fprintf(string(prcnt_outliers));
     fprintf('\n ');
 end
